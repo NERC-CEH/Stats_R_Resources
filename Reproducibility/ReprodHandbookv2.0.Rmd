@@ -265,13 +265,11 @@ output: html_document
 
 2. Directly after the YAML header is the first code chunk of the document:
 
-````r
-`r ''````{r setup, include=FALSE}
+<pre class = "r"><code>```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-````
+```</code></pre> a line of R code defining global options for processing R in this document. 
 
-a line of R code defining global options for processing R in this document. The line of code is preceeded by ` ```{r setup, include=FALSE}` and followed by three more backticks ` ``` `. The pattern of backticks tells the RMarkdown document that this is a code chunk, and the `{r...}` tells it we are working with R code. The additional arguments `{...setup, include=FALSE}` give additional arguments as to how the line of code should be processed - in this case telling us it should not be included in the final Markdown document. The line of R code `knitr::opts_chunk$set(echo = TRUE)` is used to set global options for this document - in this case the `echo = TRUE` argument means that the R code for following chunks will be displayed in the markdown document alongside the output.
+The line of code is preceeded by ` ```{r setup, include=FALSE}` and followed by three more backticks ` ``` `. The pattern of backticks tells the RMarkdown document that this is a code chunk, and the `{r...}` tells it we are working with R code. The additional arguments `{...setup, include=FALSE}` give additional arguments as to how the line of code should be processed - in this case telling us it should not be included in the final Markdown document. The line of R code `knitr::opts_chunk$set(echo = TRUE)` is used to set global options for this document - in this case the `echo = TRUE` argument means that the R code for following chunks will be displayed in the markdown document alongside the output.
 
 3. Below the first code chunk is a header starting with `##` and then some paragraph text, including a link `<...>` and some **bold** text indicated by `**...**`. These elements of markdown syntax allow you to produce a document with formatting.
 
@@ -357,7 +355,55 @@ Whenever we commit a file we need to provide a message after `-m` to briefly des
 To view changes between versions use the 'Diff' function in the Git window - the 'History' panel should allow you to look at previous changes. Note that a new version is produced on every commit, therefore it is generally advisible to commit relatively frequently so you can easily revert to a previous version if need be. 
 
 
+### 5. Beyond this workshop...
 
+
+#### 5.1. Useful links
+
+
+**General reproducibility**
+
+<http://www.ecography.org/blog/towards-more-reproducible-ecology>  
+<https://www.coursera.org/learn/reproducible-research?siteID=TnL5HPStwNw-SboO614vD2A6qjhmEi7lLw&utm_content=10&utm_medium=partners&utm_source=linkshare&utm_campaign=TnL5HPStwNw>  
+<http://retractionwatch.com/>  
+<http://onlinelibrary.wiley.com/doi/10.1111/ecog.02493/pdf>  
+<http://kinglab.eeb.lsa.umich.edu/lab/reproducibility_policy>  
+<http://www.cell.com/trends/ecology-evolution/fulltext/S0169-5347(16)30095-7>  
+<http://science.sciencemag.org/content/334/6060/1226>  
+<http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003285>  
+<https://github.com/opetchey/RREEBES>  
+<http://www.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12230/abstract>  
+<https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0850-7>  
+<http://fivethirtyeight.com/features/science-isnt-broken/#part1>  
+<http://www.nytimes.com/2011/07/08/health/research/08genes.html?_r=0>  
+<http://science.sciencemag.org/content/354/6308/142>  
+Reproducibility syllabus - <https://hackernoon.com/barba-group-reproducibility-syllabus-e3757ee635cf#.l399m11j4>  
+Reproducible research is still a challenge - <https://ropensci.org/blog/2014/06/09/reproducibility/>  
+
+
+**Data and code archiving**  
+<http://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.1002295>  
+<http://www.sciencedirect.com/science/article/pii/S0169534715002906>  
+
+**Document your workflow**  
+
+**Document your environment**   
+Packrat intro - <https://rstudio.github.io/packrat/>  
+Packrat with RStudio - <https://rstudio.github.io/packrat/rstudio.html>  
+
+**Document your code**  
+Latex - <https://www.latex-project.org/>  
+Sweave - <https://www.statistik.lmu.de/~leisch/Sweave/>  
+Knitr - <http://yihui.name/knitr/>  
+
+**Version control**  
+git - <https://git-scm.com/>  
+Github - <https://github.com/>  
+Subversion - <https://subversion.apache.org/>  
+
+**CEH-specific resources**  
+MacPherson review - <https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/206946/review_of_qa_of_govt_analytical_models_final_report_040313.pdf>  
+EIDC - <http://eidc.ceh.ac.uk/>  
 
 
 
