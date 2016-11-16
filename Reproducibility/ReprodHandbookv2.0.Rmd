@@ -1,0 +1,369 @@
+---
+title: "Reproducibility workshop"
+author: "Susan Jarvis - CEH Lancaster"
+output:
+  html_document:
+    theme: flatly
+  pdf_document: default
+---
+
+<style type="text/css">
+blockquote{ /* Normal  */ font-size: 16px;}
+</style>
+ 
+
+## Reproducibility in R workshop handbook
+
+
+The aim of this workshop is to introduce a number of reproducibility topics. Due to time constraints, it may not be possible to cover all of these today, therefore this handbook will be made available for future reference via Github  
+This workshop will guide you through conducting a basic analysis which is almost completely reproducible. There will be several elements to cover to accomplish this:  
+
+* Data will be imported from EIDC, the data archiving system of choice for CEH  
+* The analysis will all be conducted using R within an RProject, which will group all the files required for a particular analysis  
+* The RProject we create will be version controlled with git and could later be published on Github  
+* Reporting will be facilitated by creating an RMarkdown document which contains both the R code to conduct analyses and supporting text  
+
+*Note on this workshop - It will be much easier if you are using the [RStudio](https://www.rstudio.com/) editor for R as this has easy git integration and is a good editor for RMarkdown documents. If you are not currently using RStudio it is recommended that you download and install it before proceeding with the handbook*
+
+### 1. Finding, downloading and importing data into a new RProject
+
+#### 1.1. Getting data from EIDC
+
+The Environmental Information Data Centre is the CEH data repository where all data created by CEH should end up. Data stored here gets a DOI, a licence and guaranteed long term storage. Data archiving is currently required by about 40% of journals and this is set to rise in the future. Here we will use a dataset from EIDC to demonstrate a reproducible analysis.
+
+Currently, it is not possible to import data from EIDC directly into R. This is possible with some of the other CEH data holdings e.g. datasets on THREDDS, but at the moment data has to be exported from EIDC, stored in a sensible location and imported into R.
+
+For this exercise we will use data on fish elemental concentrations [https://doi.org/10.5285/ed90df1b-462c-46bb-afbd-59794fb03f6b](https://doi.org/10.5285/ed90df1b-462c-46bb-afbd-59794fb03f6b). This data is available via an Open Government License.
+
+This dataset is also available in the Github repository for this workshop (ADD LINK)
+
+
+> **Note on data formatting:**  
+> Datasets used for analysis should fulfill the following requirements:
+  
+> * Each variable is a column  
+> * Each observation is a row  
+> * Each type of observational unit is a table  
+
+> Data which meets these requirements is know as 'tidy data'. There is a [paper](http://vita.had.co.nz/papers/tidy-data.pdf) describing the logic behind this way of presenting data and also R packages to help achieve this (e.g. [tidyr](https://cran.r-project.org/web/packages/tidyr/index.html), [dplyr](https://cran.r-project.org/web/packages/dplyr/index.html)) with a useful [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf) therefore the process of getting to a tidy dataset will not be covered in further detail here.
+
+
+ **Tasks**
+  
+ - Download the dataset from either the EIDC(LINK) or Github repository(LINK)  
+ - Put the file into a new folder called "Reproducibility workshop"
+ 
+ 
+#### 1.2. Starting a new RProject
+ 
+One very simple way to increase reproducibility of your analysis is to have a sensible file management structure. It is generally a good idea to keep all scripts and data to conduct an analysis in a single folder. If an analysis has multiple self-contained stages e.g. to create different plots for a paper, then each might be kept in an individual folder with all the scripts and data required. There is a tradeoff between a perfect file structure and unneccessary duplication of scripts or data, so you will need to find a file structure that works for you.
+ 
+ Once you have a folder that you will use to do some analysis you can convert it into an RProject with RStudio. RProjects have several advantages: 
+  
+ * Each project has a separate workspace which opens automatically  
+ * The working directory is automatically set to the project directory  
+ * Loads scripts you were previously working on  
+ * Integrated with git (or other) version control  
+  
+**Tasks**  
+- Create a new R Project in RStudio (File > New Project... > Existing directory)  
+- Browse to the directory where you previously created a folder called "Reproducibility workshop"  
+
+You will now be working in a new R project - you can tell this by looking at the top right hand corner of RStudio where there should be an R in a box next to "Reproducibility workshop"
+
+
+#### 1.3. Importing data
+
+Because we are now working in an R project we can use local file paths (i.e. we don't need to write the full path 'C:/Documents...'). You can see the files available in the 'Files' window of RStudio which will show you the files stored under this project.
+
+We will read in our fish data using read.csv.
+
+```{r }
+fish <- read.csv("Elemental_concentrations_in_fish_from_lakes_in_Northwest_England.csv")
+```
+
+
+This table has 83 variables of different types - these can be easily viewed by expanding the arrow next to the dataframe name under the 'Environment' window. Alternatively you can use the summary function:
+
+```{r summary, eval = FALSE}
+summary(fish)
+```
+
+
+Note that several of the variables are factor levels indicating whether concentrations are below the value in the next field. We will ignore these for now and focus on an element without this addditional column; copper. 
+
+
+### 2. Processing and analysing data
+
+#### 2.1. Processing data before analysis
+
+Note that several of the variables are factor levels indicating whether concentrations are below the value in the next field. We will ignore these for now and focus on an element without this addditional column; copper. 
+
+At this stage you might choose to create a new dataframe with only the variables of interest, and to shorten some of the long variable names. These steps should be clearly documented in your script and you should refrain from overwriting existing names as this can cause confusion.
+
+So, you might create a new data frame with some relevant columns
+
+```{r }
+fish_analysis <- fish[,match(c("Sample_id", "Lake","Fish_species_common_name", "Gutted_ashed_fish_mass_in_grams","Cu_mg_kg_quantitative"),names(fish))]
+```
+
+
+Note that this is rather a long winded way of selecting columns - it would have been quicker to find the column numbers manually and use `fish_analysis <- fish[,c(2,3,4,8,29)]`. However this can lead to issues if column numbers change, for example if the dataset in the EIDC changes and adds a new column. Or you might add an extra filter to the dataframe prior to this step. Referencing by the required field name is more likely to be reproducible in the long term as the field name is less likely to change and any failure to find the names will lead to an error, avoiding a situation where you select the wrong column.
+
+Prior to analysis we should also check that all the variables have the variable types we expect using the summary function or Data window.
+
+```{r }
+summary(fish_analysis)
+```
+
+
+Note that there appear to be four rows with no data. These should be identified and removed to avoid any problems further down the line.
+
+
+```{r }
+emptyrows <- which(fish_analysis$Sample_id == "")
+fish_clean <- droplevels(fish_analysis[-emptyrows,]) #droplevels removes factor levels no longer present in new dataset
+#Note that another new dataframe has been produced so fish_analysis was not overwritten
+```
+
+
+> For this example we will not conduct any other processing of data, such as transformations or linking or joining to other datasets. However, often an analytical workflow will require further steps to create the data required for analysis. Several things should be considered:
+
+> * Attempt to use a single environment to link all datasets. It can be tempting to do initial exploration in e.g. SAS, but this leads to an additional data transfer step between programs that is difficult to make completely reproducible. SQL can easily be used within R with packages such as `sqldf` and external databases e.g. Oracle, Access can be interfaced with via `RODBC`.
+> * When spatial processing is required before analysis there are possibilities to do this in R (see the spatial data workshop today!), but where processing time is an issue it may be unavoidable to use an external program such as ArcGIS. Reproducibility in this step can be improved by using Python scripting to conduct the spatial analysis, potentially with an R-to-Python interface such as the `R2Python` package which allows Python to be called from R.
+> * If your analysis involves running an external program or model written in a language which cannot directly interface with R (e.g. a lower level language such as C++ or Fortran) it is possible to call these programs using a Dynamic Load Library on Windows (`dynload()` function in base R) 
+
+#### 2.2. Exploratory data analysis
+
+For this example we will run a very simple analysis on our cleaned fish dataset to look at the differences between copper levels in different fish species.
+
+Our first exploratory step will be to plot the data using base R.
+
+
+```{r }
+boxplot(fish_clean$Cu_mg_kg_quantitative ~ fish_clean$Fish_species_common_name)
+```
+
+
+This plot is not particularly pretty and if we wanted to put this plot in our manuscript we might be tempted to export the data to a dedicated graphics program like sigmaplot. However, this creates another step in our analysis workflow that is not automated and could lead to errors. Therefore it is a better idea to exploit the range of graphics options in R to produce publication-worthy plots.
+
+Often people have their own particular way they like to make graphics for publication. Personally I find a few things useful:
+
+1. To write plots directly to the format you need to submit for your paper
+2. To use the `ggplot2` package to build customised plots
+3. Take advantage of the range of colour palettes available or use rgb codes to create a custom colour palette to share with collaborators
+
+We'll use these three elements to create a boxplot of the copper data that could be put into a publication
+
+Firstly we will need to install (if required) and load the `ggplot2` package plus the `cowplot` package which removes some of the ugly `ggplot` defaults and `RColorBrewer` which provides colour palettes.
+
+```{r eval = FALSE, message = FALSE}
+install.packages(c("ggplot2", "cowplot", "RColorBrewer"))
+```
+```{r message=FALSE, warning = FALSE}
+library(ggplot2); library(cowplot); library(RColorBrewer)
+```
+
+
+`ggplot` graphics are quite different from the base graphics package you might be used to. With `ggplot` you build up a figure piece by piece, with different functions for each element of the figure. This can lead to quite a lot of code required for a single figure. However, the payoff is a much more highly customisable figure that can be made to fit publication guidelines. The code below also uses a colour palette from the `RColorBrewer` package.
+
+```{r}
+ggplot(fish_clean, aes(x = Fish_species_common_name, y = Cu_mg_kg_quantitative, fill = Fish_species_common_name))+ #state which data to use for the plot
+  stat_boxplot(geom ='errorbar') + #create whiskers
+  geom_boxplot(outlier.size =  0.5)+ #create boxes
+  xlab("Fish species")+ #label x-axis
+  ylab("Copper mg/kg")+ #label y-axis
+  guides(fill = FALSE)+ #remove legend
+  theme(text = element_text(size=8), axis.text.x = element_text(size = 5),axis.text.y = element_text(size = 5))+ #set text size
+  scale_fill_brewer(palette = "Greys") #sensible colour scheme
+```
+
+The code below writes the above figure to a png file using the `png()` function. Note the line `dev.off()` is required to close the connection to the png file so future.
+
+```{r eval = FALSE}
+#The first line opens up the png graphics device, here we will produce a 80mmx80mm (single column width) png figure at 300 dpi.
+#Often some trial and error is required with sizing to get a graphic that fits your requirements - this figure may not be ideal but gives you an idea of where to begin
+png("Copper concentrations for six fish species.png", height = 80, width = 80, units = "mm", res = 300) #open up a png file with specified dimensions and resolution
+###plot
+ggplot(fish_clean, aes(x = Fish_species_common_name, y = Cu_mg_kg_quantitative, fill = Fish_species_common_name))+ #state which data to use for the plot
+  stat_boxplot(geom ='errorbar') + #create whiskers
+  geom_boxplot(outlier.size =  0.5)+ #create boxes
+  xlab("Fish species")+ #label x-axis
+  ylab("Copper mg/kg")+ #label y-axis
+  guides(fill = FALSE)+ #remove legend
+  theme(text = element_text(size=8), axis.text.x = element_text(size = 5),axis.text.y = element_text(size = 5))+ #set text size
+  scale_fill_brewer(palette = "Greys") #sensible colour scheme
+###end plot
+dev.off() #close the png file
+```
+
+
+The resulting figure can now be viewed from the "Reproducibility workshop" project directory you set up - if you have time you could play around with different colour schemes, sizes etc.
+
+*Note on colours - depending on your audience it may be sensible to stick to a greyscale palette (e.g. for journal article), or to find a colourblind friendly palette. There are lots of options available for pre-made palettes via the [`RColorBrewer`](http://earlglynn.github.io/RNotes/package/RColorBrewer/index.html), [`viridis`](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html) and [`wesanderson`](https://github.com/karthik/wesanderson#wes-anderson-palettes) packages among others. To specify your own colour palettes use the `palette()` function with either colour names (see [here](http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf) or hexadecimal string referring to rgb values (see [here](https://www.stat.ubc.ca/~jenny/STAT545A/block14_colors.html) for a good explanation).*
+
+#### 2.3. Running a linear model
+
+For this simple example we will construct a very basic linear model to demonstrate a few reproduciblility concepts (in no way do we suggest this is the correct way to analyse the data - in fact it is almost certainly wrong as it doesn't consider that there might also be differences in copper concentrations in the different lakes).
+
+
+```{r }
+lm1 <- lm(Cu_mg_kg_quantitative ~ Fish_species_common_name, data = fish_clean)
+anova(lm1)
+```
+
+
+The above is how I often name and call linear models, however it could probably be improved - `lm1` is not particularly informative and I may well forget that I called this model `lm1` and use that name for another model later on potentially creating confusion. A better name might be `copperlm1` or similar. Also note that almost all information about the model can be retrieved using the `summary()` function if you are unsure later on which model is which.
+
+In this example, we might also want to run post-hoc tests to look at differences between species.
+
+```{r eval = FALSE}
+install.packages("multcomp")
+```
+```{r message = FALSE, warning= FALSE}
+library(multcomp)
+```
+```{r }
+posthoclm1 <- summary(glht(lm1, linfct=mcp(Fish_species_common_name="Tukey")))
+```
+
+
+So we now have some basic model results that suggest there are differences between some fish species in terms of copper concentrations, and that brown trout has significantly higher concentrations that all other fish species measured.
+
+
+### 3. Presenting results
+
+The next step is to write up our results. This can produce several challenges to reproducibility:
+
+1. Results normally have to be exported from R to a word processing program, often via copy-and-paste or typing in values
+2. Every time the analysis changes it will be necessary to replace all the tables and figures in the document so that they are up to date
+3. If there are mutliple iterations of a script, once figures and tables are produced it can be difficult to know which version produced them
+
+The best solution to these issues is to use a literate programming platform such as RMarkdown. This allows you to incorporate both text with formatting (e.g. paragraphs, bullet points) and R code and outputs. 
+
+RMarkdown documents can be easily created and edited within RStudio, a [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) is available.
+
+**Tasks**
+
+- Open a new RMarkdown document via File > New File > R Markdown...  
+- Give the Markdown document a sensible title and add your name as author  
+- Leave other options as defaults (but note that Markdown is not limited to documents and can also be used to create presentations)  
+
+The new file that opens up has several key elements:
+
+1. The first six lines are the YAML header. This determines the type of output and gives key information such as the author and date
+
+````r
+`r ''`---
+title: "Untitled"
+author: "Susan Jarvis"
+date: "23 November 2016"
+output: html_document
+---
+
+````
+
+2. Directly after the YAML header is the first code chunk of the document:
+
+````r
+`r ''````{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+````
+
+a line of R code defining global options for processing R in this document. The line of code is preceeded by ` ```{r setup, include=FALSE}` and followed by three more backticks ` ``` `. The pattern of backticks tells the RMarkdown document that this is a code chunk, and the `{r...}` tells it we are working with R code. The additional arguments `{...setup, include=FALSE}` give additional arguments as to how the line of code should be processed - in this case telling us it should not be included in the final Markdown document. The line of R code `knitr::opts_chunk$set(echo = TRUE)` is used to set global options for this document - in this case the `echo = TRUE` argument means that the R code for following chunks will be displayed in the markdown document alongside the output.
+
+3. Below the first code chunk is a header starting with `##` and then some paragraph text, including a link `<...>` and some **bold** text indicated by `**...**`. These elements of markdown syntax allow you to produce a document with formatting.
+
+4. The next code chunk produces a summary of the cars dataframe. To look at the output of this code click the green arrow at the far right of the chunk. Depending on the version of RStudio you are using two things might happen:
+  a) The output appears in the R console (older versions)
+  b) The output appears underneath the code in the Markdown document (newest version)
+  
+5. To put the text and R code together into a document click the 'Knit' button at the top of the document. This will run the R code and compile the output alongside all the text into a html document (you can also knit straight to Word or pdf)
+
+
+**Tasks**
+
+- Create a Markdown document to present a summary of the fish data analysis with explanatory text in pdf format, refer to the [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) for different ways to format text
+
+
+*Note on LaTeX -  it is possible to integrate the functions provided by the knitr package with LaTeX using .Rnw files. LaTeX provides a much more complex and customised document creation language and is therefore useful when you are creating large documents (such as a thesis!), or have specific formatting needs. However the trade off is a much steeper learning curve than the Markdown language. Useful guides which assume some existing knowledge of LaTeX are available such as [these minimal examples](http://yihui.name/knitr/demo/minimal/), and this [short guide](http://kbroman.org/knitr_knutshell/pages/latex.html). If you want to learn LaTeX there are some useful online guides to get going e.g. [this one](http://www.docs.is.ed.ac.uk/skills/documents/3722/3722-2014.pdf).*
+
+
+
+### 4. Version control 
+
+The final step element we are going to look at today is version control. We'll use the [Git](https://git-scm.com/) version control system for this example. 
+
+#### 4.1. Installing Git
+
+- Windows & OS X: <http://git-scm.com/downloads>
+- Debian/Ubuntu: sudo apt-get install git-core
+- Fedora/RedHat: sudo yum install git-core
+
+#### 4.2. Activate Git in RStudio
+
+Show RStudio where Git is installed:
+- Tools > Global Options > Git/SVN
+- Under Git executable navigate to where you downloaded Git.exe (should be C:/Program Files/Git/bin/git.exe unless you changed this)
+- Ok
+
+#### 4.3. Configure Git
+
+Setting up a user name and email address to be associated with Git is helpful if you want to collaborate with others.
+
+- Tools > Shell...
+- Type the two lines below, adding in your information
+```{}
+git config --global user.name 'Your Name'
+git config --global user.email 'your@email.com'
+```
+
+Check setup with `git config --global --list` then close the Shell.
+
+#### 4.4. Add version control to RProject
+
+- Tools > Project Options...
+- Git/SVN > Change version control system from (None) to Git
+- Confirm you want to initialise a new repository
+- Restart RStudio
+
+You should now see a new window in the 'Environment' pane called 'Git'. This will show you a list of all the files in your new Git repository with question marks next to them. 
+
+At the moment Git isn't tracking changes to any files. To do this we need to 'stage' the files we want to track.
+
+It is possible to do this in the Git window *however* I would not recommend this as it can be very slow. Instead, we can use the Shell again.
+
+To stage all the files in the repository type
+
+```{}
+git add --all
+```
+
+This will start tracking all the files in the repository. If there are files you don't want to track (e.g. html produced by knitting .Rmd files) then these can be added to the .gitignore file in the repository using a text editor.
+
+We now need to commit the files to the repository, this creates a snapshot of all the changes that have occurred since the last commit. In this case this is our first commit so the changes will be additions to the repository.
+
+```{}
+git commit -m "Initial commit"
+```
+
+Whenever we commit a file we need to provide a message after `-m` to briefly describe the changes. This is handy if we want to go back and get a quick overview of the changes we made.
+
+**Tasks**
+- We can now make some edits, for example you might want to add a new boxplot to your Markdown document to show how copper concentrations vary between lakes in the dataset. 
+- We then need to stage and commit the changes following the steps above.
+
+To view changes between versions use the 'Diff' function in the Git window - the 'History' panel should allow you to look at previous changes. Note that a new version is produced on every commit, therefore it is generally advisible to commit relatively frequently so you can easily revert to a previous version if need be. 
+
+
+
+
+
+
+
+---
+title: "Handbookv1.1.R"
+author: "susjar"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+---
