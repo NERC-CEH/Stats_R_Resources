@@ -7,38 +7,40 @@ output:
   pdf_document: default
 ---
 
-<style type="text/css">
-blockquote{ /* Normal  */ font-size: 16px;}
-</style>
+    <style type="text/css">
+    blockquote{ /* Normal  */ font-size: 16px;}
+    </style>
  
 
 ## Reproducibility in R workshop handbook
 
 
-The aim of this workshop is to introduce a number of reproducibility topics. Due to time constraints, it may not be possible to cover all of these today, therefore this handbook will be made available for future reference via Github  
+The aim of this workshop is to introduce a number of reproducibility topics. Due to time constraints, it may not be possible to cover all of these today, therefore this handbook will be made available for future reference via [Github](https://github.com/NERC-CEH/Stats_R_Resources/blob/master/Reproducibility).  
 This workshop will guide you through conducting a basic analysis which is almost completely reproducible. There will be several elements to cover to accomplish this:  
 
-* Data will be imported from EIDC, the data archiving system of choice for CEH  
-* The analysis will all be conducted using R within an RProject, which will group all the files required for a particular analysis  
-* The RProject we create will be version controlled with git and could later be published on Github  
-* Reporting will be facilitated by creating an RMarkdown document which contains both the R code to conduct analyses and supporting text  
+- *Script where possible/ Script everything* - All analysis will be conducted in R including data preparation  
+- *Document your code* - We will both comment the code we write and demonstrate how to incorporate code and text within an [RMarkdown](http://rmarkdown.rstudio.com/) document  
+- *Document your workflow* - We will use an [RStudio Project](https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects), which will group all the files required for a particular analysis  
+- *Use version control* - The Project we create will be version controlled with [git](https://git-scm.com/) and could later be published on [Github](https://github.com/)  
 
-*Note on this workshop - It will be much easier if you are using the [RStudio](https://www.rstudio.com/) editor for R as this has easy git integration and is a good editor for RMarkdown documents. If you are not currently using RStudio it is recommended that you download and install it before proceeding with the handbook*
+**Plus**
+
+* Data will be imported from [EIDC](http://eidc.ceh.ac.uk/), the data archiving system of choice for CEH  
+
+*Note on this workshop - It will be much easier if you are using the [RStudio](https://www.rstudio.com/) editor for R as this has easy git integration and is a good editor for RMarkdown documents. If you are not currently using RStudio it is recommended that you download and install it before proceeding with the handbook*  
 
 ### 1. Finding, downloading and importing data into a new RProject
 
 #### 1.1. Getting data from EIDC
 
-The Environmental Information Data Centre is the CEH data repository where all data created by CEH should end up. Data stored here gets a DOI, a licence and guaranteed long term storage. Data archiving is currently required by about 40% of journals and this is set to rise in the future. Here we will use a dataset from EIDC to demonstrate a reproducible analysis.
+The Environmental Information Data Centre is the CEH data repository where the majority data created by CEH should be stored. Data stored here gets a DOI, a licence and guaranteed long term storage. Data archiving is currently required by about 40% of journals and this is set to rise in the future. Here we will use a dataset from EIDC to demonstrate a reproducible analysis.
 
-Currently, it is not possible to import data from EIDC directly into R. This is possible with some of the other CEH data holdings e.g. datasets on THREDDS, but at the moment data has to be exported from EIDC, stored in a sensible location and imported into R.
+Currently, it is not possible to import data from EIDC directly into R. This is possible with some of the other CEH data holdings e.g. datasets on [THREDDS](http://thredds-prod.nerc-lancaster.ac.uk/thredds/catalog.html), but at the moment data has to be exported from EIDC, stored in a sensible location and imported into R.  
 
-For this exercise we will use data on fish elemental concentrations [https://doi.org/10.5285/ed90df1b-462c-46bb-afbd-59794fb03f6b](https://doi.org/10.5285/ed90df1b-462c-46bb-afbd-59794fb03f6b). This data is available via an Open Government License.
-
-This dataset is also available in the Github repository for this workshop (ADD LINK)
+For this exercise we will use data on fish elemental concentrations <https://doi.org/10.5285/ed90df1b-462c-46bb-afbd-59794fb03f6b>. This data is available via an Open Government License.
 
 
-> **Note on data formatting:**  
+> **Data formatting and tidy data:**  
 > Datasets used for analysis should fulfill the following requirements:
   
 > * Each variable is a column  
@@ -50,15 +52,15 @@ This dataset is also available in the Github repository for this workshop (ADD L
 
  **Tasks**
   
- - Download the dataset from either the EIDC(LINK) or Github repository(LINK)  
+ - Download the [dataset](https://catalogue.ceh.ac.uk/documents/ed90df1b-462c-46bb-afbd-59794fb03f6b) from the EIDC
  - Put the file into a new folder called "Reproducibility workshop"
  
  
 #### 1.2. Starting a new RProject
  
-One very simple way to increase reproducibility of your analysis is to have a sensible file management structure. It is generally a good idea to keep all scripts and data to conduct an analysis in a single folder. If an analysis has multiple self-contained stages e.g. to create different plots for a paper, then each might be kept in an individual folder with all the scripts and data required. There is a tradeoff between a perfect file structure and unneccessary duplication of scripts or data, so you will need to find a file structure that works for you.
+One very simple way to increase reproducibility of your analysis is to have a sensible file management structure. It is generally a good idea to keep all scripts and data to conduct an analysis in a single folder. 
  
- Once you have a folder that you will use to do some analysis you can convert it into an RProject with RStudio. RProjects have several advantages: 
+Once you have a folder that you will use to do some analysis you can convert it into an RProject with RStudio. RProjects have several advantages: 
   
  * Each project has a separate workspace which opens automatically  
  * The working directory is automatically set to the project directory  
@@ -71,6 +73,8 @@ One very simple way to increase reproducibility of your analysis is to have a se
 
 You will now be working in a new R project - you can tell this by looking at the top right hand corner of RStudio where there should be an R in a box next to "Reproducibility workshop"
 
+> **Workflows in R:**
+> R is not set up to run true workflows unlike programs such as [Taverna](http://www.taverna.org.uk/) and [Bioconductor](https://www.bioconductor.org/). For most users, it should be sufficient to either use the `source()` function to run one R script from another (i.e. to run a processing script from an analysis script) and therefore generate a pseudo-workflow, or to simply write down the order in which the scripts are run. However for those who have complex workflows and who wish to automate the process, the [remake](https://github.com/richfitz/remake) package may be of use. This makes use of the [GNU Make](https://www.gnu.org/software/make/) tool.  
 
 #### 1.3. Importing data
 
@@ -90,7 +94,7 @@ summary(fish)
 ```
 
 
-Note that several of the variables are factor levels indicating whether concentrations are below the value in the next field. We will ignore these for now and focus on an element without this addditional column; copper. 
+Note that several of the variables are factor levels indicating whether concentrations are below the value in the next field. We will ignore these for now and focus on an element without this additional column; copper. 
 
 
 ### 2. Processing and analysing data
@@ -379,6 +383,7 @@ To view changes between versions use the 'Diff' function in the Git window - the
 <http://science.sciencemag.org/content/354/6308/142>  
 Reproducibility syllabus - <https://hackernoon.com/barba-group-reproducibility-syllabus-e3757ee635cf#.l399m11j4>  
 Reproducible research is still a challenge - <https://ropensci.org/blog/2014/06/09/reproducibility/>  
+Data Management in R course - <https://github.com/susanjarvis501/Data-Management-in-R>  
 
 
 **Data and code archiving**  
@@ -399,7 +404,8 @@ Knitr - <http://yihui.name/knitr/>
 **Version control**  
 git - <https://git-scm.com/>  
 Github - <https://github.com/>  
-Subversion - <https://subversion.apache.org/>  
+Subversion (another version control system we use at CEH) - <https://subversion.apache.org/>  
+Intro to git in RStudio <http://r-bio.github.io/intro-git-rstudio/>  
 
 **CEH-specific resources**  
 MacPherson review - <https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/206946/review_of_qa_of_govt_analytical_models_final_report_040313.pdf>  
