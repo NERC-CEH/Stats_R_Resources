@@ -1,0 +1,7 @@
+Requirements for Shiny Workshop
+===============================
+
+Please make sure you have the following installed
+
+* Rstudio and R
+* R packages: shiny
