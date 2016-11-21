@@ -1,0 +1,399 @@
+---
+title: "Time Series Analysis"
+author: "Pete Henrys"
+
+output: html_document
+code_folding: show
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This document is meant to provide a simple overview to a number of techniques in time series analyses. We will use a number of functions written in R in order to understand, decompose and forecast a time series. This will be presented via means of simple demonstrations on existing datasets. This is not a comprehensive review of time series methods nor does it provide any detail on the understanding of each of the methods used. Caution is therefore advised if using this demonstration as a blueprint for a full analysis of your data. 
+
+Remember our definition of a time series: A time series is a sequence of observations which are ordered in time. Strictly speaking, a time series is a sequence taken at successive equally spaced points in time. Time series analysis accounts for the fact that data points taken over time may have an internal structure (such as auto-correlation, trend or seasonal variation) that should be accounted for. There are two kinds of time series data:
+
+* **Continuous**, where we have an observation at every instant of time, e.g. lie detectors, electrocardiograms.  
+* **Discrete**, where we have an observation at (usually regularly) spaced intervals, e.g. monthly sales, daily rainfall. 
+ 
+First let us load some important libraries into R. Most of the functions we will use are included in the base set up but some require the use of additional functions provided by bespoke packages. 
+
+```{r message=FALSE, warning=FALSE}
+#load required libraries
+library(forecast)
+library(mgcv)
+```
+
+Now that we have loaded the libraries we shall start by looking at some time series basics.
+
+## Time Series Basics
+
+### Time series objects in R 
+
+In R time series objects are vectors or matrices with class of "ts" which represent data which has been sampled at equispaced points in time. In the matrix case, each column of the matrix data is assumed to contain a single (univariate) time series. Time series must have at least one observation, and although they need not be numeric there is very limited support for non-numeric series. The key aspect to note is that the series is assumed to be observed at equispaced points. Time series objects in R do not handle uneven sampling regimes. 
+
+We will first read in some data and convert it to a time series and then plot it in R. The data we will read in are monthly average measurements of chlorophyll *a* concentrations in the north basin of lake Windemere from January 1964 to December 2009 (further details of this dataset are provided here: <https://doi.org/10.5285/1de49dab-c36e-4700-8b15-93a639ae4d55>). The commands below can be used to read in the data and plot it. Make sure you understand what the frequency and start arguments in the ts command mean. 
+
+```{r }
+
+#read in some data
+chlor <- scan("C://Wind_NBAS_Chlor.dat")
+
+#convert to time series object by specifying the frequcny of observations and the start time  
+chlor.ts <- ts(chlor, frequency=12, start=c(1964,1))
+
+#plot the time series
+plot(chlor.ts)
+
+```
+
+You will notice that once the data is converted to a time series object, plotting this in R is straight forward and the time axis is neatly formatted for you.  Usual plot arguments still work with the time series plot, such as xlim, lwd, expression etc. For example, try adding an appropriate y axis label to this plot or changing the time window on the x axis to view specific segments in greater detail. 
+
+```{r eval=FALSE}
+plot(chlor.ts,ylab=expression("Concentration of chlorophyll a (mg m"^-3*" lake water)"),mgp=c(2,.5,0)) 
+```
+
+> ### *Exercise*
+> <span style="color:red"> Simulate a white noise process over the same period as the Chlorophyll data and add the trace plot of this to the time series plot produced above.</span> 
+
+
+### Smoothing and Moving Average
+
+A common consideration when analysing a time series is to examine the underlying trend the data exhibits. In classic time series approaches this is done by filtering, more often referred to as smoothing. The most commonly applied smoothing method for time series is the moving average approach. A moving average is defined by taking an average across a defined window of the data that covers a specific number of observations (known as the order). This can easily be implemented in R using the following code.   
+
+
+```{r }
+#Fit a moving average of order 12 (ie 1 year) to the chlorophyll data
+chlor.mv_avg <- ma(chlor.ts,order=12)
+
+#plot the chlorophyll time series and add the estimated moving average trend line
+plot(chlor.ts)
+lines(chlor.mv_avg, col="red", lwd=2)
+
+```
+
+> ### *Exercise*
+> <span style="color:red"> Try different orders within the moving average command and see how this affects the results. </span>
+ 
+ 
+ 
+## Classic Time Series Methods
+
+There is a vast volume of literature on classic time series analyses dating back decades. Classic time series methods tend to look at analysing and decomposing properties inherent in the temporal signal and then using this to forecast. They do not extend to including external factors or covariates. The classic methods can very broadly be categorised into two groups: Holt-Winters approaches, which includes moving average and smoothing, and Box-Jenkins methods, more commonly referred to as ARIMA methods. We will look at each of these in turn.  
+
+### Holt-Winters Method
+
+Holt-Winters method is a general framework for filtering time series. It is used to decompose the signal into an estimated mean, trend and seasonal component, each of which is updated at each "new" observation along the series and hence predictions can be made for future time lags based on these estimated components. The method can be used to estimate each of these components or the user can manually specify whether or not seasonal or trend components should be included. 
+
+To decide whether or not seasonality and trend may be an issue and worth including in our fitted Holt-Winters model, we can use the `decompose` function in R. Use the helpfile in R to understand how this empirical function works.   
+
+```{R }
+
+plot(decompose(chlor.ts))
+
+```
+
+We can see from the decomposition plot that both trend and seasonality are important as they are clearly both non-zero. We therefore need to fit the HoltWinters model allowing for both trend and seasonality as well as a constant mean. This can easily be done in R using the `HoltWinters()` function. This function estimates values for `alpha`, `beta` and `gamma`, which represent the constant, trend and seasonality components respectively. The function estimates the parameter associated with each of the components that decides the critical lag in the time series. Parameters have values between 0 and 1, and values that are close to 0 mean that little weight is placed on the most recent observations when making forecasts of future values, whereas values near to 1 mean that recent values have strong influence. The parameters can therefore be seen as controlling the weights assigned to each lag prior to the observed point in the time series. The function also estimates a multiplicative coefficient associated with each of these components. In R we fit a HoltWinters model by the following code.
+
+
+```{R }
+## fit HoltWinters model to the chlorophyll data. include trend and seasonality and 
+chlor.HW <- HoltWinters(chlor.ts)
+
+## plot the chlorophyll time series and add the line fitted by HoltWinters method
+par(mfrow=c(1,2))
+plot(chlor.ts,ylab=expression("Concentration of chlorophyll a (mg m"^-3*" lake water)"),mgp=c(2,.5,0))
+lines(chlor.HW$fitted[,1],col="red",lwd=2)
+
+## re plot focussing on a subsection of the time series to see what is going on 
+plot(chlor.ts,xlim=c(1970,1975), ylab=expression("Concentration of chlorophyll a (mg m"^-3*" lake water)"),mgp=c(2,.5,0))
+lines(chlor.HW$fitted[,1],col="red",lwd=2)
+
+```
+
+The key advantage of using Holt-Winters methods is that predictions can easily be made for future time lags. For example if we wanted to predict the chlorophyll *a* concentrations for the next 2 years we could simply type the following code, where `h` represents the number of step-ahead predictions to make. Obviously, the further `h` steps ahead you predict, the more uncertainty there is in the estimate. Change the value of `h` to see how the uncertainty in the predictions changes. 
+
+```{R }
+
+plot.forecast(forecast.HoltWinters(chlor.HW, h=24),xlim=c(2005,2012))
+
+```
+
+Holt-Winters is a general framework that covers a number of other well known time series methods. For example single (also called simple) exponential smoothing is a special case of Holt-Winters models whereby the trend and seasonality components are ignored and only a constant level is fitted. Therefore, if you have a time series that can be described using an additive model with constant level and no seasonality, you can use single exponential smoothing to make short-term forecasts. Single exponential smoothing provides a way of estimating the level at the current time point. Smoothing is controlled by the parameter alpha (lies between 0 and 1) to produce the estimate of the level at the current time point. As previous, values of alpha that are close to 0 mean that little weight is placed on the most recent observations when making forecasts of future values.
+
+
+> ### *Exercise*
+> <span style="color:red"> Fit a simple expontential smoothing model to the chlorophyll data by turnng off the trend and seasonal components in the `HoltWinters` function (specify `beta=FALSE` and `gamma=FALSE` within the function). Can you understand how the fitted relationship has been produced and how predictions are made? (*Hint: you may want to zoom in to look at only a couple of years in your plot window*)</span>
+
+
+
+### ARIMA Methods
+
+Holt-Winters methods are useful for making forecasts, and make no assumptions about the correlations between successive values of the time series. However, if you want to make prediction intervals for forecasts made using exponential smoothing methods, the prediction intervals require that the forecast errors are uncorrelated and are normally distributed with mean zero and constant variance.
+
+While Holt-Winters methods do not incorporate correlations between successive values of the time series, in some cases you can make a better predictive model by taking correlations in the data into account. Autoregressive Integrated Moving Average (ARIMA) models include an explicit statistical model for the irregular component of a time series, that allows for non-zero auto-correlations in the irregular component.
+
+
+ARIMA models are defined for stationary time series and are characterised by parameters `p, d, q` that represent the order of the Auto Regressive (AR), Integrated (I) and Moving Average (MA) components of the model. If you start off with a non-stationary time series, you will first need to 'difference' the time series until you obtain a stationary time series. If you have to difference the time series `d` times to obtain a stationary series, then you have an `ARIMA(p,d,q)` model, where `d` is the order of differencing used - this represents the Integrated component of the ARIMA model. You can difference a time series using the `diff()` function in R. 
+
+If your time series is stationary, or if you have transformed it to a stationary time series by differencing `d` times, the next step is to select the appropriate ARIMA model, which means finding the values of most appropriate values of `p` and `q` for an `ARIMA(p,d,q)` model. To do this, you usually need to examine the auto-correlations and partial auto-correlations of the stationary time series.
+
+To plot the auto-correlations and partial auto-correlations across different lags, we can use the `acf()` and `pacf()` functions in R, respectively. To get the actual values of the auto-correlations and partial auto-correlations, we set `plot=FALSE` in each of the functions. To understand what the auto-correlation plots are likely to look like under different orders for `p` and `q`, we will simulate some time series data and then plot the resulting correlograms. 
+
+```{R }
+set.seed(9876)
+## Simulate a second order auto-regressive process with coefficients 0.4 and 0,4
+sim.ar<-arima.sim(list(ar=c(0.4,0.4)),n=1000)
+## Simulate a second order moving average process with coefficients 0.6 and -0.4
+sim.ma<-arima.sim(list(ma=c(0.6,-0.4)),n=1000)
+
+## split the plot window up into 2x2
+par(mfrow=c(2,2))
+##plot the auto-correlation function of the second order AR process
+acf(sim.ar,main="ACF of AR(2) process")
+##plot the auto-correlation function of the second order MA process
+acf(sim.ma,main="ACF of MA(2) process")
+##plot the partial auto-correlation function of the second order AR process
+pacf(sim.ar,main="PACF of AR(2) process")
+##plot the partial auto-correlation function of the second order MA process
+pacf(sim.ma,main="PACF of MA(2) process")
+
+
+```
+
+From the plot you can see how the ACF provides a clearer visualisation of the MA process but the PACF provides clearer evidence for the AR process. 
+
+Alternatively, the auto.arima() function can be used to find the appropriate ARIMA model, eg. type `auto.arima(sim.ar)`. The output says an appropriate model is ARIMA(2,0,0) with coefficients 0.375 and 0.396.
+
+Once the order of the ARIMA(p,d,q)-model has been specified, the function arima( ) can be used to estimate the parameters. The `arima()` function returns a list containing e.g. the coefficients, residuals, and the Akaike Information Criterion AIC. Once the parameters are estimated, these can be used as a predictive model for making forecasts for future values of your time series.
+
+```{R eval=FALSE}
+## Difference the data as clearly non-stationary
+chlor.ts_d1 <- diff(chlor.ts)
+## View the ACF and PACF plots to look for structure in series
+acf(chlor.ts_d1)
+pacf(chlor.ts_d1)
+
+## plots dont demonstrate obvious structure but clearly some form of AR process is needed
+chlor.ARIMA <- arima(chlor.ts_d1,order=c(2,0,0))
+
+## having fit the model let's make some predictions and plot them 
+chlor.ARIMA.forecast <- forecast.Arima(chlor.ARIMA, h=12)
+plot.forecast(chlor.ARIMA.forecast)
+```
+
+
+It is also possible to fit seasonal ARIMA models whereby the processes inherent in the data (AR and MA) operate over cycles of observations rather than neighbouring one. For example correlation in between January 1990 and January 1991 values but no correlation between January 1990 and February 1990. The auto.arima function allows for these types of models. Note that if we use the auto.arima function on the chlorophyll data, a seasonal ARIMA model is fitted with period 12.  
+
+> ### *Exercise*
+> <span style="color:red"> Use auto arima to fit a model to the chlorophyll data and then add predictions to plot. Compare results from this with what you saw above. </span>
+
+
+## Regression-based Approaches
+
+Increasingly, regression approaches are used to examine time series. This is often because either there is interest in the effect of covariates or confounding factors may need to be modelled out of the signal. 
+
+
+### Simple linear regression
+
+We will start by looking at simple linear regression. For this analysis we will use a different dataset that exhibits a more obvious trend over the whole period. The data we will use is the monthly sales of Australian beer. We start by reading the  data into R, converting it to a time series and fitting a basic quadratic relationship to the data over time. This is all achieved as follows. 
+
+```{R }
+#read in the data
+beer <- scan("C://bier.dat")
+
+##convert to a time series as before - note I use the log scale here 
+beer <- ts(log(beer), start=c(1956,1), frequency=12)
+
+##create a vecotr representing the time dimension
+t <- seq(1956,1995.2, length=length(beer))
+##create a squared version of this covariate
+t2 <- t^2
+
+##plot the time series
+plot(beer)
+
+##fit a quadratic realtionship to the data using the lm command
+lfit.beer <- lm(beer ~ t+t2)
+## add the fitted line to the data
+lines(t, lfit.beer$fit, col="red", lwd=2)
+```
+
+Although the simple quadratic fit captures the general trend of the series, it does not account for any seasonality. Within the linear model framework, we can add some seasonality into the regression using Fourier (sine and cosine) terms with yearly cycles. Due to the way we constructed the time covariate `t`, this can easily be done using the following: 
+
+```{R }
+
+## Define Fourier cycles with period equal to 1 year
+sin.t<-sin(2*pi*t)
+cos.t<-cos(2*pi*t)
+
+##plot time series
+plot(beer)
+##add fit of time series which includes cyclic terms as well as quadratic trend 
+lines(t, lm(beer ~ t+t2 + sin.t + cos.t)$fit, col="blue", lwd=2)
+
+```
+
+
+Whilst the fitted model seems to do a reasonable job of capturing the trend and some aspect of seasonality, it is clear that the full variation has not been captured. This is probably due to the restrictive nature of the parametric form assumed for the model. We therefore may need to consider a more flexible approach.  
+
+
+> ### *Exercise*
+> <span style="color:red"> Try fitting a cubic relationship to the data. Does that improve the fit?</span>
+
+
+
+### Generalised Additive Models
+
+We could use GAMs to fit a flexible smoothly varying trend over the whole observation window AND a smoothly varying seasonal component. Using the `mgcv` package in R, this is fairly straight forward. Note though that now the time series object is no longer beneficial to us and we have to convert to a data frame for modelling. 
+
+```{R }
+
+## create a data frame with the beer sales data in and columns for month and year
+beer.df <- data.frame(Beer = beer, Month = c(rep(1:12,39),1:8), Year = rep(1956:1995,each=12)[-(477:480)])
+
+## model the beer data including two smooths, one over months within a year, one over years
+m <- gam(Beer ~ s(Month, bs = "cc", k = 12) + s(Year),data=beer.df)
+
+## plot the time series and add the predictions from the fitted mdoel
+plot(beer)
+lines(t,m$fitted.values,col="blue",lwd=3)
+
+```
+
+This appears to provide a reasonable fit to the data and more of the variation is captured than in the simple linear models. However, let us consider everything we have just learnt about time series and look in more detail at the unexplained temporal signal (ie the residuals) to see if there is any structure unaccounted for. If structure is present and we fail to account for it then our estimated standard errors within this model will be biased and our inference invalid. 
+
+```{R eval=FALSE}
+
+## use the acf and pacf function to look at auto-correlation of residuals from fitted GAM
+par(mfrow=c(1,2))
+acf(resid(m), lag.max = 36, main = "ACF")
+pacf(resid(m), lag.max = 36, main = "pACF")
+
+```
+
+Although these plots are not entirely clear, there is some evidence to suggest that there may be some lagged auto-correlation present in the data, it is therefore worth refitting the model with varying orders of the auto-regressive to see which provides the best fit. This can be done using the `gamm` function within mgcv as follows. 
+
+```{R eval=FALSE}
+## first fit a model as before without any temporal correlation
+m0 <- gamm(Beer ~ s(Month, bs = "cc") + s(Year), data=beer.df)
+
+## fit same model but include 1st order auto-regressive component
+m1 <- gamm(Beer ~ s(Month, bs = "cc") + s(Year), data=beer.df, correlation = corARMA(form = ~ 1|Year, p = 1))
+
+## fit same model but include 2nd order auto-regressive component
+m2 <- gamm(Beer ~ s(Month, bs = "cc") + s(Year), data=beer.df, correlation = corARMA(form = ~ 1|Year, p = 2))
+
+##Use likelihood ratio tests to compare the three models and see which is most appropriate
+anova(m0$lme, m1$lme, m2$lme)
+```
+
+It would seem that there is evidence to keep the model with the first order auto-regressive component included. Although further diagnostic checking is required, in this case we would base our inference on model `m1`. Note that in the models fitted above, only correlation within a year (`form = ~1|Year`) was accounted for rather than going across years - this is purely to speed up the processing. 
+
+
+
+> ### *Exercise*
+> <span style="color:red"> Try fitting the same model as in m1 above but using the `corExp` argument rather than `corARMA`. Comapre the fitted model with m1 based on AIC. Note: you do not need to specify `p` in the `corExp` argument.  </span>
+
+
+
+## Spectral Analysis
+
+The purpose of spectral analysis is to decompose a time series into periodic components. We might consider doing this with a regression, where we regress the time series on a set of sine and cosine waves. For a dataset with annual variation, we might expect that the sine and cosine waves with periods of one year might be important, but what other waves might be present in this time series?
+
+In the linear regression example we saw how sinusoidal waves were added as covariates to account for some element of seasonality. However, to include such functions in a regression approach we had to manually choose the period over which the sine wave occurred, for example yearly cycles. To determine what other waves might be present in this time series we could extend this regression. If we have `N` observations, and include `N` sines and cosines, then the regression will perfectly predict the data. The regression will be overfitted. But I might learn something by seeing which coefficients are significantly different from zero. This is the basis of spectral analysis and constitutes what the "periodogram" tells us.
+
+R has a nice simple to use function for estimating the periodogram of a time series. We can estimate the periodogram of the chlorophyll data using the following command: 
+
+
+```{R }
+## Estimate and plot the spectral periodogram of the chlorophyll data
+raw.spec <- spec.pgram(chlor.ts, taper = 0)
+
+```
+
+The periodogram demonstrates peaks at frequencies of 1, 2 and 3. The blue line in the top left corner provides a confidence range for a significant peak. Note that frequency is inversely related to period so while a frequency of 1 represents 1 year, frequencies of 2 and 3 represent 6 months and 4 months respectively.  
+
+#### Tapering
+
+You will notice the argument `taper` included in the `spec.pgram` function. This defines how much of the time series to downweight at the start and end. The reason for this is that when you estimate a periodogram, you are implicitly making the assumption that your time series is circular, i.e. that you could wrap the time series around and just keep time marching on until infinity. Obviously, this isn't so. If you wrap the time series around, there will be a jump where the end meets the start again. This jump is spurious, but it will propagate itself through all the frequencies, contaminating them.
+
+The solution is to downweight the beginning and end of the data. This way, when you calculate the periodogram, you'll be giving more weight to the middle, and less weight to the ends. There is still the jump at the end, but it has very little weight, so it's effect is diminished. This downweighting is called tapering and can be included easily within the `spec.pgram` function. Typically values of 5% work well - use `taper=0.05` to achieve this. 
+
+#### Smoothing
+
+Further to this, there is a fundamental problem with the periodogram. Unlike most estimates you've encountered, such as the mean or a regression coefficient, which get more reliable as you collect more data, the periodogram does not get more reliable. As you collect more data, you add more periodogram points, but they are all just as noisy as before.
+
+We are assuming that there is some underlying curve of spectral values, and that the periodogram estimates this. But the periodogram is noisy, and will always be noisy. We call this underlying curve the "spectral density function," or sometimes the "power spectrum". For this reason some form of smoothing of the periodogram is often required prior to using it within a classification or other such analysis. 
+
+
+
+```{R }
+
+## estimate the periodogram but use a kernel to smooth the resulting values. taper by 5%
+smth.spec <- spec.pgram(chlor.ts, kernel = kernel("daniell", c(9, 9)), taper = 0.05)
+
+```
+
+From the smoothed periodogram we can see that only the amplitude at frequency equal to 1 is significant. i.e. only yearly cycles are significantly evident in the signal. 
+
+> ### *Exercise*
+> <span style="color:red"> Estimate the periopdogram for the beer dataset with appropriate smoothing and tapering. Can you interpret the peaks? </span>
+
+
+
+The main advantage with spectral analysis is the ability to convert a continuous signal into amplitudes within specific groups (or bands). This enables one to look at classification techniques and hence coherence between 2 or more distinct time series. Time series classification is to build a classification model based on labelled time series and then use the model to predict the label of unlabelled time series. For time series classification with R we extract and build features from time series data first, and then apply existing classification techniques, such as SVM, k-NN, neural networks, regression and decision trees, to the feature set. Spectral analysis such as harmonic decomposition described above is an example of a popular feature extraction technique. Another is using Wavelets.
+
+
+### Wavelets
+
+
+Wavelet analysis is a more general form of spectral decomposition whereby the bases are not restricted to harmonic forms (ie sine and cosine waves) and the location as well as the periodicity are evaluated. Many different wavelet bases are available and there is vast liter . Though 
+
+```{R eval=FALSE}
+
+## load in the wavelet library 
+library(wavelets)
+
+## use the discrete wavelet transform function and haar filter to decompose the chlorophyll data
+wt <- dwt(chlor.ts, filter="haar")
+
+## plot the resultant decomposition
+plot.dwt(wt, levels = 6)
+
+```
+
+
+
+
+
+
+## Useful Resources and Links 
+
+* Peter Diggle's book on Time Series Analysis :  Diggle PJ. Time series; a biostatistical introduction. 1990.
+
+* A useful demo of classic time series methods : <http://a-little-book-of-r-for-time-series.readthedocs.io/en/latest/src/timeseries.html>
+
+
+* An introduction to using GAMs to model time series : <http://www.fromthebottomoftheheap.net/2014/05/09/modelling-seasonal-data-with-gam/>
+
+
+* A useful resource ground - Rob Hyndman's Website <http://robjhyndman.com/>
+
+
+* You can find a list of R packages for analysing time series data on the CRAN Time Series Task View webpage.
+
+* To learn about time series analysis, I would highly recommend the book "Time series" (product code M249/02) by the Open University, available from the Open University Shop.
+
+* There are two books available in the "Use R!" series on using R for time series analyses, the first is Introductory Time Series with R by Cowpertwait and Metcalfe, and the second is Analysis of Integrated and Co-integrated Time Series with R by Pfaff.
+
+
+
+
+
+
+ 
+ 
