@@ -264,7 +264,7 @@ plot.forecast(chlor.ARIMA.forecast)</code></pre>
 <h3>Simple linear regression</h3>
 <p>We will start by looking at simple linear regression. For this analysis we will use a different dataset that exhibits a more obvious trend over the whole period. The data we will use is the monthly sales of Australian beer. We start by reading the data into R, converting it to a time series and fitting a basic quadratic relationship to the data over time. This is all achieved as follows.</p>
 <pre class="r"><code>#read in the data
-beer &lt;- scan(&quot;C://bier.dat&quot;)
+beer &lt;- scan(&quot;C://beer.dat&quot;)
 
 ##convert to a time series as before - note I use the log scale here 
 beer &lt;- ts(log(beer), start=c(1956,1), frequency=12)
@@ -365,15 +365,16 @@ smth.spec &lt;- spec.pgram(chlor.ts, kernel = kernel(&quot;daniell&quot;, c(9, 9
 </div>
 <div id="wavelets" class="section level3">
 <h3>Wavelets</h3>
-<p>Wavelet analysis is a more general form of spectral decomposition whereby the bases are not restricted to harmonic forms (ie sine and cosine waves) and the location as well as the periodicity are evaluated. Many different wavelet bases are available and there is vast liter . Though</p>
+<p>Wavelet analysis is a more general form of spectral decomposition whereby the bases are not restricted to harmonic forms (ie sine and cosine waves) and the location as well as the periodicity are evaluated. Many different wavelet bases are available and there is vast literature relating to suitable bases in different scenarios. Though we will not go over this in any detail, a wavelet decomposition into <code>n.levels</code> can easily be performed using the <code>wavelet</code> package in R as follows.</p>
 <pre class="r"><code>## load in the wavelet library 
 library(wavelets)
 
 ## use the discrete wavelet transform function and haar filter to decompose the chlorophyll data
-wt &lt;- dwt(chlor.ts, filter=&quot;haar&quot;)
+wt &lt;- dwt(chlor, filter=&quot;haar&quot;)
 
 ## plot the resultant decomposition
 plot.dwt(wt, levels = 6)</code></pre>
+<p>This decomposition can be used in similar ways to the harmonic decomposition for purposes of classification and simplification.</p>
 </div>
 </div>
 <div id="useful-resources-and-links" class="section level2">
