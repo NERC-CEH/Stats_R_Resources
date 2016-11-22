@@ -1,6 +1,7 @@
 ---
 title: "Reproducibility workshop"
 author: "Susan Jarvis - CEH Lancaster"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   html_document:
     theme: flatly
@@ -78,7 +79,7 @@ You will now be working in a new R project - you can tell this by looking at the
 
 #### 1.3. Importing data
 
-Because we are now working in an R project we can use local file paths (i.e. we don't need to write the full path 'C:/Documents...'). You can see the files available in the 'Files' window of RStudio which will show you the files stored under this project.
+Because we are now working in an RStudio Project we can use local file paths (i.e. we don't need to write the full path 'C:/Documents...'). You can see the files available in the 'Files' window of RStudio which will show you the files stored under this project.
 
 We will read in our fish data using read.csv.
 
@@ -94,16 +95,14 @@ summary(fish)
 ```
 
 
-Note that several of the variables are factor levels indicating whether concentrations are below the value in the next field. We will ignore these for now and focus on an element without this additional column; copper. 
+Note that several of the variables are factor levels indicating whether concentrations are below the value in the next field. We will ignore these for now and focus on an element without this additional column; copper in the field `Cu_mg_kg_quantitative`. 
 
 
 ### 2. Processing and analysing data
 
 #### 2.1. Processing data before analysis
 
-Note that several of the variables are factor levels indicating whether concentrations are below the value in the next field. We will ignore these for now and focus on an element without this addditional column; copper. 
-
-At this stage you might choose to create a new dataframe with only the variables of interest, and to shorten some of the long variable names. These steps should be clearly documented in your script and you should refrain from overwriting existing names as this can cause confusion.
+At this stage you might choose to create a new dataframe with only the variables of interest, and to shorten some of the long variable names. These steps should be clearly documented in your script and you should refrain from overwriting existing objects if possible as this can cause problems further down the line.
 
 So, you might create a new data frame with some relevant columns
 
@@ -112,7 +111,7 @@ fish_analysis <- fish[,match(c("Sample_id", "Lake","Fish_species_common_name", "
 ```
 
 
-Note that this is rather a long winded way of selecting columns - it would have been quicker to find the column numbers manually and use `fish_analysis <- fish[,c(2,3,4,8,29)]`. However this can lead to issues if column numbers change, for example if the dataset in the EIDC changes and adds a new column. Or you might add an extra filter to the dataframe prior to this step. Referencing by the required field name is more likely to be reproducible in the long term as the field name is less likely to change and any failure to find the names will lead to an error, avoiding a situation where you select the wrong column.
+Note that this is rather a long winded way of selecting columns - it would have been quicker to find the column numbers manually and use `fish_analysis <- fish[,c(2,3,4,8,29)]`. However this can lead to issues if column numbers change, for example if the dataset in the EIDC changes and adds a new column or if you add an extra filter to the dataframe prior to this step. Referencing by the required field name is more likely to be reproducible in the long term as the field name is less likely to change and any failure to find the names will lead to an error, avoiding a situation where you select the wrong column.
 
 Prior to analysis we should also check that all the variables have the variable types we expect using the summary function or Data window.
 
@@ -125,7 +124,7 @@ Note that there appear to be four rows with no data. These should be identified 
 
 
 ```{r }
-emptyrows <- which(fish_analysis$Sample_id == "")
+emptyrows <- which(fish_analysis$Sample_id == "") #remove rows where Sample_id is empty
 fish_clean <- droplevels(fish_analysis[-emptyrows,]) #droplevels removes factor levels no longer present in new dataset
 #Note that another new dataframe has been produced so fish_analysis was not overwritten
 ```
@@ -133,7 +132,7 @@ fish_clean <- droplevels(fish_analysis[-emptyrows,]) #droplevels removes factor 
 
 > For this example we will not conduct any other processing of data, such as transformations or linking or joining to other datasets. However, often an analytical workflow will require further steps to create the data required for analysis. Several things should be considered:
 
-> * Attempt to use a single environment to link all datasets. It can be tempting to do initial exploration in e.g. SAS, but this leads to an additional data transfer step between programs that is difficult to make completely reproducible. SQL can easily be used within R with packages such as `sqldf` and external databases e.g. Oracle, Access can be interfaced with via `RODBC`.
+> * Use a single environment to link all datasets where possible. It can be tempting to do initial exploration in e.g. SAS, but this leads to an additional data transfer step between programs that is difficult to make completely reproducible. SQL can easily be used within R with packages such as `sqldf` and external databases e.g. Oracle, Access can be interfaced with via `RODBC`.
 > * When spatial processing is required before analysis there are possibilities to do this in R (see the spatial data workshop today!), but where processing time is an issue it may be unavoidable to use an external program such as ArcGIS. Reproducibility in this step can be improved by using Python scripting to conduct the spatial analysis, potentially with an R-to-Python interface such as the `R2Python` package which allows Python to be called from R.
 > * If your analysis involves running an external program or model written in a language which cannot directly interface with R (e.g. a lower level language such as C++ or Fortran) it is possible to call these programs using a Dynamic Load Library on Windows (`dynload()` function in base R) 
 
@@ -149,17 +148,17 @@ boxplot(fish_clean$Cu_mg_kg_quantitative ~ fish_clean$Fish_species_common_name)
 ```
 
 
-This plot is not particularly pretty and if we wanted to put this plot in our manuscript we might be tempted to export the data to a dedicated graphics program like sigmaplot. However, this creates another step in our analysis workflow that is not automated and could lead to errors. Therefore it is a better idea to exploit the range of graphics options in R to produce publication-worthy plots.
+This plot is not particularly pretty and if we wanted to put this plot in our manuscript we might be tempted to export the data to a dedicated graphics program like Sigmaplot. However, this creates another step in our analysis workflow that is not automated and could lead to errors. Therefore it is a better idea to exploit the range of graphics options in R to produce publication-worthy plots.
 
-Often people have their own particular way they like to make graphics for publication. Personally I find a few things useful:
+Personally I find a few things useful in creating graphics in R which are publication quality:
 
-1. To write plots directly to the format you need to submit for your paper
+1. To write plots directly to the format you need to submit for your paper (e.g. png, pdf)
 2. To use the `ggplot2` package to build customised plots
 3. Take advantage of the range of colour palettes available or use rgb codes to create a custom colour palette to share with collaborators
 
-We'll use these three elements to create a boxplot of the copper data that could be put into a publication
+We'll use these three elements to create a boxplot of the copper data that could be put into a publication.
 
-Firstly we will need to install (if required) and load the `ggplot2` package plus the `cowplot` package which removes some of the ugly `ggplot` defaults and `RColorBrewer` which provides colour palettes.
+Firstly we will need to install (if not already installed) and load the `ggplot2` package plus the `cowplot` package which removes some of the ugly `ggplot` defaults and also `RColorBrewer` which provides colour palettes.
 
 ```{r eval = FALSE, message = FALSE}
 install.packages(c("ggplot2", "cowplot", "RColorBrewer"))
@@ -182,12 +181,12 @@ ggplot(fish_clean, aes(x = Fish_species_common_name, y = Cu_mg_kg_quantitative, 
   scale_fill_brewer(palette = "Greys") #sensible colour scheme
 ```
 
-The code below writes the above figure to a png file using the `png()` function. Note the line `dev.off()` is required to close the connection to the png file so future.
+The code below writes the above figure to a png file using the `png()` function. Note the line `dev.off()` is required at the end to close the connection to the png file.
 
 ```{r eval = FALSE}
 #The first line opens up the png graphics device, here we will produce a 80mmx80mm (single column width) png figure at 300 dpi.
-#Often some trial and error is required with sizing to get a graphic that fits your requirements - this figure may not be ideal but gives you an idea of where to begin
-png("Copper concentrations for six fish species.png", height = 80, width = 80, units = "mm", res = 300) #open up a png file with specified dimensions and resolution
+#Often some trial and error is required with sizing to get a graphic that fits your requirements - you could have a go optimising this figure
+png("Copper concentrations for six fish species.png", height = 80, width = 80, units = "mm", res = 300) #open up a new png file with specified dimensions and resolution
 ###plot
 ggplot(fish_clean, aes(x = Fish_species_common_name, y = Cu_mg_kg_quantitative, fill = Fish_species_common_name))+ #state which data to use for the plot
   stat_boxplot(geom ='errorbar') + #create whiskers
@@ -202,7 +201,7 @@ dev.off() #close the png file
 ```
 
 
-The resulting figure can now be viewed from the "Reproducibility workshop" project directory you set up - if you have time you could play around with different colour schemes, sizes etc.
+The resulting figure can now be viewed from the "Reproducibility workshop" project directory you set up - if you have time you could play around with different colour schemes, sizes etc to make a better looking plot.
 
 *Note on colours - depending on your audience it may be sensible to stick to a greyscale palette (e.g. for journal article), or to find a colourblind friendly palette. There are lots of options available for pre-made palettes via the [`RColorBrewer`](http://earlglynn.github.io/RNotes/package/RColorBrewer/index.html), [`viridis`](https://cran.r-project.org/web/packages/viridis/vignettes/intro-to-viridis.html) and [`wesanderson`](https://github.com/karthik/wesanderson#wes-anderson-palettes) packages among others. To specify your own colour palettes use the `palette()` function with either colour names (see [here](http://www.stat.columbia.edu/~tzheng/files/Rcolor.pdf) or hexadecimal string referring to rgb values (see [here](https://www.stat.ubc.ca/~jenny/STAT545A/block14_colors.html) for a good explanation).*
 
@@ -245,7 +244,7 @@ The next step is to write up our results. This can produce several challenges to
 
 The best solution to these issues is to use a literate programming platform such as RMarkdown. This allows you to incorporate both text with formatting (e.g. paragraphs, bullet points) and R code and outputs. 
 
-RMarkdown documents can be easily created and edited within RStudio, a [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) is available.
+RMarkdown documents can be easily created and edited within RStudio, a [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) is available. You might have already noticed that this document is written in RMarkdown!
 
 **Tasks**
 
@@ -261,7 +260,7 @@ The new file that opens up has several key elements:
 `r ''`---
 title: "Untitled"
 author: "Susan Jarvis"
-date: "23 November 2016"
+date: "24 November 2016"
 output: html_document
 ---
 
@@ -281,12 +280,12 @@ The line of code is preceeded by ` ```{r setup, include=FALSE}` and followed by 
   a) The output appears in the R console (older versions)
   b) The output appears underneath the code in the Markdown document (newest version)
   
-5. To put the text and R code together into a document click the 'Knit' button at the top of the document. This will run the R code and compile the output alongside all the text into a html document (you can also knit straight to Word or pdf)
+5. To put the text and R code together into a document click the 'Knit' button at the top of the document. This will run the R code and compile the output alongside all the text into a html document (you can also knit straight to Word or pdf). The 'Knit' function uses the R package `knitr` to convert ("knit") your R code into html.
 
 
 **Tasks**
 
-- Create a Markdown document to present a summary of the fish data analysis with explanatory text in pdf format, refer to the [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) for different ways to format text
+- Edit the template Markdown document to present a summary of the fish data analysis with explanatory text in pdf format, refer to the [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) for different ways to format text
 
 
 *Note on LaTeX -  it is possible to integrate the functions provided by the knitr package with LaTeX using .Rnw files. LaTeX provides a much more complex and customised document creation language and is therefore useful when you are creating large documents (such as a thesis!), or have specific formatting needs. However the trade off is a much steeper learning curve than the Markdown language. Useful guides which assume some existing knowledge of LaTeX are available such as [these minimal examples](http://yihui.name/knitr/demo/minimal/), and this [short guide](http://kbroman.org/knitr_knutshell/pages/latex.html). If you want to learn LaTeX there are some useful online guides to get going e.g. [this one](http://www.docs.is.ed.ac.uk/skills/documents/3722/3722-2014.pdf).*
@@ -295,7 +294,7 @@ The line of code is preceeded by ` ```{r setup, include=FALSE}` and followed by 
 
 ### 4. Version control 
 
-The final step element we are going to look at today is version control. We'll use the [Git](https://git-scm.com/) version control system for this example. 
+The final element of reproducibility we are going to look at today is version control. We'll use the [Git](https://git-scm.com/) version control system for this example. 
 
 #### 4.1. Installing Git
 
@@ -336,15 +335,25 @@ At the moment Git isn't tracking changes to any files. To do this we need to 'st
 
 It is possible to do this in the Git window *however* I would not recommend this as it can be very slow. Instead, we can use the Shell again.
 
-To stage all the files in the repository type
+To check the status of the files in the repository open the shell and type
+
+```{}
+git status
+```
+
+This will give you a list of files in the repository along with which ones are tracked (currently none of them).
+
+To start tracking changes we can stage all the files in the repository by typing
 
 ```{}
 git add --all
 ```
 
-This will start tracking all the files in the repository. If there are files you don't want to track (e.g. html produced by knitting .Rmd files) then these can be added to the .gitignore file in the repository using a text editor.
+into the shell.
 
-We now need to commit the files to the repository, this creates a snapshot of all the changes that have occurred since the last commit. In this case this is our first commit so the changes will be additions to the repository.
+This will start tracking all the files in the repository. If there are files you don't want to track (e.g. it is not necessary to track the .html file you produced by knitting your .Rmd file) then these can be added to the .gitignore file in the repository using a text editor e.g. Notepad. Write the name of each file to ignore on a new line.
+
+We now need to commit the files to the repository, this creates a snapshot of all the changes that have occurred since the last commit. In this case this is our first commit so all the changes will be additions to the repository.
 
 ```{}
 git commit -m "Initial commit"
@@ -364,21 +373,22 @@ To view changes between versions use the 'Diff' function in the Git window - the
 
 #### 5.1. Useful links
 
+Below are some links to documents or resources I found useful in preparing this course. 
 
 **General reproducibility**
 
-<http://www.ecography.org/blog/towards-more-reproducible-ecology>  
-<https://www.coursera.org/learn/reproducible-research?siteID=TnL5HPStwNw-SboO614vD2A6qjhmEi7lLw&utm_content=10&utm_medium=partners&utm_source=linkshare&utm_campaign=TnL5HPStwNw>  
-<http://retractionwatch.com/>  
+Towards a more reproducible ecology - <http://www.ecography.org/blog/towards-more-reproducible-ecology>  
+MOOC on reproducible research - <https://www.coursera.org/learn/reproducible-research?siteID=TnL5HPStwNw-SboO614vD2A6qjhmEi7lLw&utm_content=10&utm_medium=partners&utm_source=linkshare&utm_campaign=TnL5HPStwNw>  
+Retraction Watch - <http://retractionwatch.com/>  
 <http://onlinelibrary.wiley.com/doi/10.1111/ecog.02493/pdf>  
-<http://kinglab.eeb.lsa.umich.edu/lab/reproducibility_policy>  
+King Lab reproducibility policy - <http://kinglab.eeb.lsa.umich.edu/lab/reproducibility_policy>  
 <http://www.cell.com/trends/ecology-evolution/fulltext/S0169-5347(16)30095-7>  
 <http://science.sciencemag.org/content/334/6060/1226>  
 <http://journals.plos.org/ploscompbiol/article?id=10.1371/journal.pcbi.1003285>  
-<https://github.com/opetchey/RREEBES>  
+Effort to reproduce key ecological findings - <https://github.com/opetchey/RREEBES>  
 <http://www.onlinelibrary.wiley.com/doi/10.1111/2041-210X.12230/abstract>  
 <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0850-7>  
-<http://fivethirtyeight.com/features/science-isnt-broken/#part1>  
+Science/reproducibility is hard - <http://fivethirtyeight.com/features/science-isnt-broken/#part1>  
 <http://www.nytimes.com/2011/07/08/health/research/08genes.html?_r=0>  
 <http://science.sciencemag.org/content/354/6308/142>  
 Reproducibility syllabus - <https://hackernoon.com/barba-group-reproducibility-syllabus-e3757ee635cf#.l399m11j4>  
@@ -391,10 +401,15 @@ Data Management in R course - <https://github.com/susanjarvis501/Data-Management
 <http://www.sciencedirect.com/science/article/pii/S0169534715002906>  
 
 **Document your workflow**  
+Taverna - 
+Remake - 
+Simple workflows in R - 
 
 **Document your environment**   
+We've not dicussed environment documentation (step 6 of our reproducibility steps) in detail. The key resource to help you do this in R is the `packrat` package. `packrat` enables you to record the versions of all the R packages you are using for an analysis, allows you to manage different versions of packages e.g. when you have two analyses that are working with different versions, and has an add-on to RStudio to provide an easy visual interface. For those who are working with analyses where you truly need a virtual environment (e.g. working with applications or highly complex workflows) then Docker is a useful tool heavily used by the Application Development team which provides a lightweight virtual environment.   
 Packrat intro - <https://rstudio.github.io/packrat/>  
 Packrat with RStudio - <https://rstudio.github.io/packrat/rstudio.html>  
+Docker -  
 
 **Document your code**  
 Latex - <https://www.latex-project.org/>  
@@ -411,11 +426,3 @@ Intro to git in RStudio <http://r-bio.github.io/intro-git-rstudio/>
 MacPherson review - <https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/206946/review_of_qa_of_govt_analytical_models_final_report_040313.pdf>  
 EIDC - <http://eidc.ceh.ac.uk/>  
 
-
-
-
----
-title: "Handbookv1.1.R"
-author: "susjar"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
----
