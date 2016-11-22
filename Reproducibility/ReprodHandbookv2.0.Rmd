@@ -1,19 +1,14 @@
 ---
 title: "Reproducibility workshop"
 author: "Susan Jarvis - CEH Lancaster"
-date: "`r format(Sys.time(), '%d %B, %Y')`"
+date: "22nd November 2016"
 output:
   html_document:
     theme: flatly
   pdf_document: default
 ---
 
-    <style type="text/css">
-    blockquote{ /* Normal  */ font-size: 16px;}
-    </style>
- 
-
-## Reproducibility in R workshop handbook
+# Reproducibility in R workshop handbook
 
 
 The aim of this workshop is to introduce a number of reproducibility topics. Due to time constraints, it may not be possible to cover all of these today, therefore this handbook will be made available for future reference via [Github](https://github.com/NERC-CEH/Stats_R_Resources/blob/master/Reproducibility).  
@@ -61,7 +56,7 @@ For this exercise we will use data on fish elemental concentrations <https://doi
  
 One very simple way to increase reproducibility of your analysis is to have a sensible file management structure. It is generally a good idea to keep all scripts and data to conduct an analysis in a single folder. 
  
-Once you have a folder that you will use to do some analysis you can convert it into an RProject with RStudio. RProjects have several advantages: 
+Once you have a folder that you will use to do some analysis you can convert it into an [RStudio Project](https://support.rstudio.com/hc/en-us/articles/200526207-Using-Projects) with RStudio. RStudio Projects have several advantages: 
   
  * Each project has a separate workspace which opens automatically  
  * The working directory is automatically set to the project directory  
