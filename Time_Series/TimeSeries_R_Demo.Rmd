@@ -203,7 +203,7 @@ We will start by looking at simple linear regression. For this analysis we will 
 
 ```{R }
 #read in the data
-beer <- scan("C://bier.dat")
+beer <- scan("C://beer.dat")
 
 ##convert to a time series as before - note I use the log scale here 
 beer <- ts(log(beer), start=c(1956,1), frequency=12)
@@ -351,7 +351,7 @@ The main advantage with spectral analysis is the ability to convert a continuous
 ### Wavelets
 
 
-Wavelet analysis is a more general form of spectral decomposition whereby the bases are not restricted to harmonic forms (ie sine and cosine waves) and the location as well as the periodicity are evaluated. Many different wavelet bases are available and there is vast liter . Though 
+Wavelet analysis is a more general form of spectral decomposition whereby the bases are not restricted to harmonic forms (ie sine and cosine waves) and the location as well as the periodicity are evaluated. Many different wavelet bases are available and there is vast literature relating to suitable bases in different scenarios. Though we will not go over this in any detail, a wavelet decomposition into `n.levels` can easily be performed using the `wavelet` package in R as follows. 
 
 ```{R eval=FALSE}
 
@@ -359,14 +359,14 @@ Wavelet analysis is a more general form of spectral decomposition whereby the ba
 library(wavelets)
 
 ## use the discrete wavelet transform function and haar filter to decompose the chlorophyll data
-wt <- dwt(chlor.ts, filter="haar")
+wt <- dwt(chlor, filter="haar")
 
 ## plot the resultant decomposition
 plot.dwt(wt, levels = 6)
 
 ```
 
-
+This decomposition can be used in similar ways to the harmonic decomposition for purposes of classification and simplification. 
 
 
 
