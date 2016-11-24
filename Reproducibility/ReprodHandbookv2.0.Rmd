@@ -280,7 +280,7 @@ The line of code is preceeded by ` ```{r setup, include=FALSE}` and followed by 
 
 **Tasks**
 
-- Edit the template Markdown document to present a summary of the fish data analysis with explanatory text in pdf format, refer to the [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) for different ways to format text
+- Edit the template Markdown document to present a summary of the fish data analysis with explanatory text in pdf format, refer to the [cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) for different ways to format text  
 
 
 *Note on LaTeX -  it is possible to integrate the functions provided by the knitr package with LaTeX using .Rnw files. LaTeX provides a much more complex and customised document creation language and is therefore useful when you are creating large documents (such as a thesis!), or have specific formatting needs. However the trade off is a much steeper learning curve than the Markdown language. Useful guides which assume some existing knowledge of LaTeX are available such as [these minimal examples](http://yihui.name/knitr/demo/minimal/), and this [short guide](http://kbroman.org/knitr_knutshell/pages/latex.html). If you want to learn LaTeX there are some useful online guides to get going e.g. [this one](http://www.docs.is.ed.ac.uk/skills/documents/3722/3722-2014.pdf).*
