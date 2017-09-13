@@ -26,7 +26,7 @@ set.seed(1234)
 rasterOptions(progress="text")
 
 # Remove any objects already in the workspace...
-rm(list=ls())
+#rm(list=ls()) #only run this if you have saved everything you want from your existing workspace!
 gc()
 
 # Set working directory to where the script and GIS files folder are saved...
