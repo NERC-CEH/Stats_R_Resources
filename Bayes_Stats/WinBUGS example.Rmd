@@ -6,21 +6,28 @@ title: Introduction to WinBUGs with R
 
 WinBUGS is a piece of software developed for Bayesian statistical analysis using Markov Chain Monte Carlo (MCMC). It is useful because it allows you to specify models with much more flexibility than many R packages, but it is more computationally expensive. WinBUGS can be run through R but requires you to write your model in BUGS code, which is saved to a text file then read in when you run the model.Related Bayesian statistics software (OpenBUGS, JAGS) use similar code to WinBUGS. WinBUGS can be downloaded [here](http://www.mrc-bsu.cam.ac.uk/software/bugs/).
 
-###Key features of WinBUGS code
+### Key features of WinBUGS code
 
 When writing models for WinBUGS there are some key characteristics of WinBUGS code to bear in mind:
 
 1. Models are always written in two parts, one for the distribution of the random part of the model and one with the linear predictor function
+
 2. Vectorisation is not supported so models must loop through observations
+
 3. It is important to ensure correct indexing at each step (e.g. `mu[i]` not `mu`)
+
 4. Variances are expressed as precision (1/variance) normally written as `tau`
+
 5. Calculations must be carried out on separate lines and are not always the same as R e.g. `pow(x,2)` is used instead of `x^2`. If you want to carry out a calculation on a whole vector it must go in a loop.
+
 6. The order of statements is not important i.e. you can use a variable before you define it
+
 7. Stochastic nodes always have twiddles `~`, deterministic nodes always have arrows `<-`
+
 
 To demonstrate these differences we will run a simple linear model using both standard R functions (`lm`) and WinBUGS.
 
-##Setting up the workspace
+## Setting up the workspace
 
 The `R2WinBUGS` package allows WinBUGS to be run from R. `mcmcplots` produces some nice plots of the mcmc chain output.
 
@@ -30,7 +37,7 @@ library(R2WinBUGS)
 library(mcmcplots)
 ```
 
-##Data preparation
+## Data preparation
 
 In this example we are going to use the inbuilt Iris data. In this case we are going to test whether sepal length is related to petal length.
 
@@ -50,7 +57,7 @@ petal <- iris$Petal.Length
 
 Often you will want to standardise and centre your data at this stage. WinBUGS doesn't work very well if the variables in your model are on different scales so it is usually a good idea to do this at the same time as defining each variable in the workspace e.g. `sepal <- as.numeric(scale(iris$Sepal.Length))`. However, because our example data is on very similar scales we can skip this step.
 
-##Set up the model
+## Set up the model
 
 If we are using the standard R function `lm` we can now run our model (for now we are ignoring other aspects of the dataset e.g. the Species column):
 
@@ -111,7 +118,7 @@ sink()
 ```
 
 
-##Define data, parameters, initials and settings
+## Define data, parameters, initials and settings
 
 Now that we have written the code for our model we need to prepare the remaining objects required to run the BUGS model. These are:
 
@@ -120,7 +127,7 @@ Now that we have written the code for our model we need to prepare the remaining
 3. Initial values for each parameter
 4. The MCMC settings we want to use
 
-###Data
+### Data
 
 All the variables used in the model need to be provided in a named list. Note this includes the number of observations to loop through `N`; it is better to define N here as limited calculations are supported by WinBUGS
 
@@ -129,7 +136,7 @@ N = length(sepal)
 data = list("N","sepal","petal")
 ```
 
-###Parameters
+### Parameters
 
 You also need to define which parameters you want to report on, here we ask WinBUGS to report the intercept and slope (but not `tau`). This flexibility is useful in a large model where you might be estimating tens of parameters without needing to report on them all.
 
@@ -137,7 +144,7 @@ You also need to define which parameters you want to report on, here we ask WinB
 params = c("alpha", "beta")
 ```
 
-###Initial values
+### Initial values
 
 It is also a good idea to define starting values for the MCMC chains of each parameter. This is because although WinBUGS can choose these for you, the choice can sometimes be crucial to model performance so it is a good idea to specify them yourself. This is done via a function which is run for each MCMC chain.
 
@@ -149,7 +156,7 @@ inits <- function () {list(alpha = rnorm(1),
                            sigma = 1)}
 ``` 
 
-###MCMC settings
+### MCMC settings
 
 Lastly, we need to define the MCMC settings to hand to WinBUGS. Generally it is a good idea to begin with a small number of samples to test if the model will run before increasing to run the final model.
 
@@ -202,7 +209,7 @@ We can see that the model has converged well and comparison of the mean values f
 **Success! Time for a cup of tea** 
 
 
-##Further reading
+## Further reading
 
 Although WinBUGS code is not exactly succinct it is extremely flexible. While it probably isn't worth writing 20 lines of code to replicate the results of `lm`, WinBUGS is a good solution to avoid writing your own likelihood functions in R for complex models. Most distributions are supported and you can even define your own.
 
