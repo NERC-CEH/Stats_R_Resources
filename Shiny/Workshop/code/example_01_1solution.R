@@ -1,17 +1,20 @@
 library(shiny)
 
 ui <- fluidPage(
-  # 1. Add a slider that allows your user 
-  # to select a number between 10 and 1000
-  # set the initial value to 500
-  # hint: look at 'sliderInput'
+  # 1. Change the slider so it can only select a number
+  # between 1 and 500. Set the starting value to 200
   sliderInput(inputId = "num", 
               label = "Choose a number", 
-              value = 500, min = 10, max = 1000)
+              value = 200, min = 1, max = 500),
+  # 2. Add an output element to display your histogram
+  # hint: 'plotOutput'
+  plotOutput('hist')
 )
 
 server <- function(input, output) {
-
-  }
+  output$hist <- renderPlot({
+    hist(rnorm(input$num))
+  })
+}
 
 shinyApp(ui = ui, server = server)
