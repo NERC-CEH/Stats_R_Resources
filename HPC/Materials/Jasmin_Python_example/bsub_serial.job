@@ -1,0 +1,10 @@
+#!/bin/bash
+
+#BSUB -e z_logs/%J.e
+#BSUB -o z_logs/%J.o
+#BSUB -J SERIAL_PLOT
+#BSUB -q short-serial
+#BSUB -W 04:00
+
+./serial_plot_global_mean_map.py
+
