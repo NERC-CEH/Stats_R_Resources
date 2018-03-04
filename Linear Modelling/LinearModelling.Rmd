@@ -1,0 +1,187 @@
+---
+title: "Linear Modelling"
+author: "Pete Henrys"
+
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Introduction
+
+This is a very simple introduction to linear modelling, going through a couple of basic examples by hand. We are going to fit linear regression relationships without using the `lm` function. In fact, we are going to create our own `lm` function that recreates all the results, but in doing so we will understnad what all the output means and exactly how it was derived. 
+
+### Data
+
+We will start by simulating some data - that way we know exactly what the regression parameters are. Make sure you understand exactly what the followin code is doing and how the data is being simulated. If it is not clear, change some of the parameters and see how it affects your plot.
+
+```{r }
+## first define some parameters used to simulate the data, feel free to change any of these. 
+n.sim <- 100
+intercept <- 2.5
+slope.coef <- 3
+y.error <- 3
+
+## based on the parameters simulate an independent variable, x
+x <- rnorm(n.sim)
+## and a dependent variable, y 
+y <- intercept + slope.coef*x +rnorm(n.sim,0,y.error)
+  
+## plot the relationship for a simple visual guide
+plot(x,y)
+
+```
+
+### Estimate Parameters
+
+To estimate the regression parameters, R, like many other software packages uses ordinary least squares estimation. The idea behind this is to find the set of parameters that minimise the sum of squared residuals, thus providing the best fit to the data. This can be worked out exactly by writing an equation for the sum of squared residuals and minimising by differentiation. We are going to do this via numerical optimisation though. 
+
+So the first thing to do is to write a function that takes the regression parameters, the dependent variable and the independent variable as arguments and returns the sum of squared residuals, For simple, single variable regression, that looks something like:
+
+```{r }
+## my function to return the sum of squared residuals from a specified regression relationship  
+reg.sum.resid <- function(PAR,x,y){
+
+	err = y - (PAR[1] + PAR[2]*x)
+
+	return(sum(err^2))
+
+}
+```
+
+We now want to find the parameter estimes - values of `PAR`- that produce the smallest value of this function. Try running the function your self with some values of `PAR`. Obviously, as the data were simulated, you already know the answer. So `reg.sum.resid(PAR = c(2.5, 3), x=x, y=y)` should return the smallest value (if you used the same regression parameter as I did). 
+
+However, we can't go through all possible combinations in a trial and error type way, so we use the `optim` function to find the parameters set that minimised our function. This function essentially provides a numerical alternative to differentiation based on Newton's method. 
+
+```{r }
+## use optim to find parameter values that mimimise the sum of squared residuals
+res <- optim(c(1,1), reg.sum.resid, x=x, y=y)
+## print the estimated parameters. How do they compare with the truth?
+print(res$par)
+
+```
+### Estimating the error associated with parameer estimates
+
+Now that we have estimated the regression parameters, we need to estimate the error associated with these estimates. THis is done by calculating the overall error of the regression, ie the `y.error` value you specified when you simulated the data. This is estimated just as the variance in the residuals. 
+
+```{r }
+reg.var <- res$value/(n.sim-2)
+
+```
+
+This overall error is partitioned amongst the independent variables proportional to the variance within independent variables themselves. This is one crucial assumption of linear regression - the ability to We can work this out easiest using matrix algebra. This also extends neatly into multiple regression problems. 
+
+
+
+```{r }
+
+## so first we will write our independent variable in matrix form
+## note that we include a vector of 1's representing the intercept term
+mat <- matrix(c(rep(1,n.sim),x),ncol=2,nrow=n.sim)
+
+
+## Having written this as a matrix we then take the dot product of this matrix with itself to  
+dot.mat <- t(mat)%*%(mat)
+
+## We then take the inverse of this so that it can be multiplied by the overall regression error 
+inv.mat <- solve(dot.mat)
+
+## finally, we multiply the regression error by the inverse of the variable error and square root to get the standard error
+par.std.err <- sqrt(reg.var*diag(inv.mat))
+  
+
+## print the estimated standard errors
+print(par.std.err)
+
+```
+
+So we now have the estimated parameters and the associated standard errors.
+
+
+### Significant testing 
+
+To conduct simple hypothesis tests on these parameters estimated, testing the null hypothesis that they are equal to 0, we use T tests. THe T test is very similar to a Normal distribution test. 
+
+
+```{r }
+
+## so as with a standarised normal, we subtract the null value (though in this case that is 0) and divide by the standard error. This returns a T value. 
+T.vals <- res$par/par.std.err
+
+## Given the t values, we compare with the standard t distribution to see how significnat it is. Note that we need to specify the degrees of freedom and multiple by2 as it is a two-tailed test. 
+2*(1-pt(T.vals,n.sim-2))
+
+```
+This returns the p value - the probability of obtaining the coefficient that we did given that the true value is 0. So if this is very low, we conclude that the null hypothesis cannot be true.
+
+
+
+
+### Overall Model Assessment
+
+Most people are familiar with R squared values and what they represent - a score from 0 to 1 refelecting the fit of your model to the data. What most don't know is explicitly what the R-squared value is. It is the proportion of the overall variation in the `y` values explained by the model. We actually work this out by calculating the variance that still exists after fitting the regression dividing by the total variance and subtracting from 1. The R squared value is therefore calculated as follows:
+
+
+```{r }
+
+## the total error is just equal to the variance in the y values
+tot.error <- sum((y-mean(y))^2)
+
+## the residual error is what we have already calculated
+resid.error <- reg.var*(n.sim-2)
+
+## so the proportion of unexplained variation is given by
+unexp.var  <- resid.error / tot.error 
+
+## and the proportion of explained variation, the R squared values is given by
+R.sq <- 1 - unexp.var
+
+print(R.sq)
+
+```
+
+In addition to the R squared value, we often perfrom an ANOVA on the whole model, testing whether it is significantly different to a null model or not. What we therefore test is whether the variance explained by the regression is the same as the total variance or not. If the two are statistically wequivalent, then obviously our model hasn't made any significant difference and we conclude it is not a useful model. Fortunately, some fairly simple maths shows that the ratio of emprical variances form samples generated from a process with the same variance follows an F distribution.   
+
+```{r}
+
+## the regression variation is given by sum of squared differenced between the predicted y values and the mean of the y values
+mod.error <- sum(((res$par[1]+res$par[2]*x)-mean(y))^2)
+
+## the F value is then this model error divided by the degrees of freedom in the regression, which in simple regression is 1, divided by the overall regression error
+F.Value <- (mod.error/1)/(reg.var)
+
+## Finally, we compare this f value to the standard F distribution on the appropriate degreess of freedom to determine how significant it is and whether we reject the null hyptheses that all parameter estimates are equal to 0, equivalently the model is useless. 
+1-pf(F.Value,1,(n.sim-2))
+
+
+```
+
+
+### Compare with what you already knew
+
+Finally, we compare with what the in built function in `R` gives us. 
+
+```{r}
+
+## this is fairly simple to do in R once you know the syntax. and now you know what all the values mean and where they came from!
+summary(lm(y~x))
+
+```
+
+
+
+> ### Exercise 1
+>
+Now that we have gone through a simple example, try repeating this for a multiple regression problem. So simulate `x1`, `x2` and `x3` as independent variables which `y` is dependent on and try repeating all the steps above. Again, compare your results with what you know to be the truth and with the outputs from the `lm` function. 
+
+
+
+> ### Exercise 2
+>
+Write up all your code used into a simple function that takes two arguments, `y` and a list of independent variables `x1`, `x2`, `...` and fits a linear regression and returns a table similar to that produced by `lm`.
+
+
+
+
