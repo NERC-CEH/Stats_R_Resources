@@ -1,0 +1,11 @@
+### This README refers to the notes in the Visualisation folder. If you have any problems, please feel free to email me (katsmi@ceh.ac.uk), or call me on ext.2209
+
+I have coded up the visualisation notes in R notebooks. 
+If you are not familiar with notebooks, you can either view the notes in RStudio with the .Rmd files, or you can view them in your browser with the .html files.
+If you choose to view them in RStudio, the graphics are displayed "in line" with the code in "chunks". 
+You can execute each of the chunks using the little play button on each section of code.
+
+The leaflet html was too big to upload to github, sorry, so i had to zip it. It seems the background maps in the first few plots isnt happy on the html files... it displays properly in the .Rmd.
+All the data you need should be included in this folder. You will need to edit the working directory at the start of each script.
+
+Enjoy!
