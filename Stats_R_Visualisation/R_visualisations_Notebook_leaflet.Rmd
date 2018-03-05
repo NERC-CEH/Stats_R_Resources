@@ -22,6 +22,8 @@ install.packages("maptools")
 library(maptools)
 install.packages("htmltools")
 library(htmltools)
+install.packages("sp")
+library(sp)
 ```
 #### Load in some data to look at
 ```{r}
