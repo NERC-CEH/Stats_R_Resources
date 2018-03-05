@@ -3,11 +3,11 @@ title: "An example of using JASMIN with R"
 author: "Tom August"
 date: '`r format(Sys.time(), "%d %B, %Y")`'
 output:
+  pdf_document:
+    toc: yes
   html_document:
     toc: yes
     toc_float: yes
-  pdf_document:
-    toc: yes
 ---
 
 ```{r setup, include=FALSE}
