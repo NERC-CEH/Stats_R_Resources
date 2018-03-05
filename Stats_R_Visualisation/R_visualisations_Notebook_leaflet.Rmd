@@ -1,0 +1,135 @@
+---
+title: "Stats and R Visualisation Notebook - Leaflet"
+output:
+  html_document: default
+  html_notebook: default
+---
+Session lead: Katie Smith (Centre for Ecology & Hydrology) k.a.smith@ceh.ac.uk (01491 692209)
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+This session will show you the basic concepts of plotting using the interactive package leaflet.
+
+#### You may need to set your working directory:
+```{r}
+setwd("Z:/repos/katsmi/Stats_R_Visualisation/")
+```
+### Install the packages needed
+```{r}
+install.packages("leaflet")
+library(leaflet)
+install.packages("maptools")
+library(maptools)
+install.packages("htmltools")
+library(htmltools)
+```
+#### Load in some data to look at
+```{r}
+metadata<-read.csv("NRFA_Master_Station_Metadata_Nov2016.csv")
+```
+#### make a spatial points dataframe
+```{r}
+coords <- cbind(Easting = as.numeric(as.character(metadata$EASTING)),
+                Northing = as.numeric(as.character(metadata$NORTHING)))
+# create spatial points
+metadata_SP <- SpatialPointsDataFrame(coords,
+                                 data = metadata,
+                                 proj4string = CRS("+init=epsg:27700"))
+# convert to lat long so leaflet can read the points
+latlong <- "+init=epsg:4326"
+metadata_SP_LL <- spTransform(metadata_SP, CRS(latlong))
+
+## replace Lat, Long
+metadata_SP_LL@data$Long <- coordinates(metadata_SP_LL)[, 1]
+metadata_SP_LL@data$Lat <- coordinates(metadata_SP_LL)[, 2]
+```
+#### map the points - notice that to add more arguments to leaflet, you use %>% as breakers
+```{r}
+leaflet(data = metadata_SP_LL) %>% 
+  addTiles() %>%
+  addMarkers(~Long, ~Lat, popup = ~as.character(metadata_SP_LL$RIVER), label = ~as.character(metadata_SP_LL$RIVER))
+```
+#### Cluster the catchment markers
+```{r}
+leaflet(data = metadata_SP_LL) %>% 
+  addTiles() %>%
+  addMarkers(~Long, ~Lat, popup = ~as.character(metadata_SP_LL$RIVER), label = ~as.character(metadata_SP_LL$RIVER),
+             clusterOptions = markerClusterOptions())
+```
+#### plot circles instead of markers, and colour them by BFI
+```{r}
+pal <- pal <- colorNumeric("viridis",domain = metadata_SP_LL$BASE_FLOW_INDEX)
+leaflet(data = metadata_SP_LL) %>% 
+  addTiles() %>%
+  addCircleMarkers(~Long, ~Lat, popup = ~as.character(metadata_SP_LL$RIVER), label = ~as.character(metadata_SP_LL$RIVER),
+                   radius = 3, color = ~pal(BASE_FLOW_INDEX), stroke = FALSE, fillOpacity = 0.7)
+```
+#### change the basemap to the grey one
+```{r}
+pal <- pal <- colorNumeric("viridis",domain = metadata_SP_LL$BASE_FLOW_INDEX)
+leaflet(data = metadata_SP_LL) %>% 
+  addTiles() %>%
+  addCircleMarkers(~Long, ~Lat, popup = ~as.character(metadata_SP_LL$RIVER), label = ~as.character(metadata_SP_LL$RIVER),
+                   radius = 3, color = ~pal(BASE_FLOW_INDEX), stroke = FALSE, fillOpacity = 0.7) %>%
+  addProviderTiles(providers$CartoDB.Positron)
+```
+#### add a legend
+```{r}
+pal <- pal <- colorNumeric("viridis",domain = metadata_SP_LL$BASE_FLOW_INDEX)
+leaflet(data = metadata_SP_LL) %>% 
+  addTiles() %>%
+  addCircleMarkers(~Long, ~Lat, popup = ~as.character(metadata_SP_LL$RIVER), label = ~as.character(metadata_SP_LL$RIVER),
+                   radius = 3, color = ~pal(BASE_FLOW_INDEX), stroke = FALSE, fillOpacity = 0.7) %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addLegend("bottomright", pal = pal, values = ~BASE_FLOW_INDEX, opacity=1, title="Base Flow Index")
+```
+#### lets try shapefiles - load a shapefile in and re-project to wgs84
+```{r}
+# read in a catchment shapefile
+catch_bounds<-readShapeSpatial("./Shapefiles/updatedCatchList_Jan2017_DR.shp")
+# define projections for UK: WGS84, British National Grid and Mercator
+wgs84 = '+proj=longlat +datum=WGS84'
+bng = '+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +datum=OSGB36 +units=m +no_defs'
+# I know that the catchment boundaries are in bng, so specify this
+catch_bounds_bng<-catch_bounds
+catch_bounds_bng@proj4string=CRS(bng)
+# convert to WGS84 - needed to project with basemaps properly
+catch_bounds_wgs84 = spTransform(catch_bounds_bng, CRS(wgs84))
+# reorder by shape area to show nester catchments
+catch_bounds_wgs84<-catch_bounds_wgs84[order(catch_bounds_wgs84$Shape_Area,decreasing = TRUE),]
+```
+#### plot the map
+```{r}
+pal <- pal <- colorNumeric("viridis",domain = catch_bounds_wgs84$Shape_Area)
+leaflet(data = catch_bounds_wgs84) %>% 
+  addTiles() %>%
+  addPolygons(color="grey", weight=1, fillColor = ~pal(Shape_Area), fillOpacity=1,label=~updatedC_1) %>%
+  addLegend("bottomright", pal = pal, values = ~Shape_Area, opacity=1, title="Catchment Area (km2)")
+```
+#### merge in the other metadata
+# merge catchment boundaries with NRFA metdata
+```{r}
+catch_bounds_wgs84<-merge(catch_bounds_wgs84,metadata,by.x="updatedCat",by.y="STATION")
+```
+#### plot another map
+```{r}
+pal <- pal <- colorNumeric("viridis",domain = catch_bounds_wgs84$BASE_FLOW_INDEX)
+leaflet(data = catch_bounds_wgs84) %>% 
+  addTiles() %>%
+  addPolygons(color="grey", weight=1, fillColor = ~pal(BASE_FLOW_INDEX), fillOpacity=1) %>%
+  addLegend("bottomright", pal = pal, values = ~BASE_FLOW_INDEX, opacity=1, title="BFI")
+```
+#### add more to the labels
+```{r}
+labels <- sprintf(
+      "<strong>CatchID: %s</strong> <br/> <strong>River: %s</strong> <br/> BFI: %.3f <br/> Mean Flow: %.3f",
+      catch_bounds_wgs84$updatedCat,catch_bounds_wgs84$updatedC_1,catch_bounds_wgs84$BASE_FLOW_INDEX,catch_bounds_wgs84$MEAN_FLOW)%>%
+      lapply(htmltools::HTML)
+pal <- pal <- colorNumeric("viridis",domain = catch_bounds_wgs84$BASE_FLOW_INDEX)
+leaflet(data = catch_bounds_wgs84) %>% 
+  addTiles() %>%
+  addPolygons(color="grey", weight=1, fillColor = ~pal(BASE_FLOW_INDEX), fillOpacity=1,
+              label=labels,labelOptions=labelOptions(style = list("font-weight" = "normal", padding = "1px 2px"),
+                                                    textsize = "10px",direction = "auto",opacity=0.8)) %>%
+  addLegend("bottomright", pal = pal, values = ~BASE_FLOW_INDEX, opacity=1, title="BFI")
+```
