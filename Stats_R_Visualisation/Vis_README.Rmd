@@ -6,6 +6,7 @@ If you choose to view them in RStudio, the graphics are displayed "in line" with
 You can execute each of the chunks using the little play button on each section of code. Alternatively you can use the "Run" menu on the top right of your editor window.
 
 The leaflet html was too big to upload to github, sorry, so i had to zip it. It seems the background maps in the first few plots isnt happy on the html files... it displays properly in the .Rmd.
-All the data you need should be included in this folder. You will need to edit the working directory at the start of each script.
+All the data you need should be included in this folder, all data is subject to copyright, and is here for demonstration purposes only. 
+You will need to edit the working directory at the start of each script.
 
 Enjoy!
