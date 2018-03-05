@@ -6,6 +6,9 @@
 # and make it animate
 # 4 - Add an interactive table of the dataset below the 
 # current user interface. hint: http://shiny.rstudio.com/gallery/basic-datatable.html 
+# install.packages('DT')
+
+library(DT)
 
 ui <- pageWithSidebar(
   headerPanel('Iris k-means clustering'),
