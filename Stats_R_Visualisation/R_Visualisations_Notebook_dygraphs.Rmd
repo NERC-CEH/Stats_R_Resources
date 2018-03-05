@@ -1,0 +1,97 @@
+---
+title: "Stats and R Visualisation Notebook - Dygraphs"
+output:
+  html_document: default
+  html_notebook: default
+---
+Session lead: Katie Smith (Centre for Ecology & Hydrology) k.a.smith@ceh.ac.uk (01491 692209)
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+This session will show you the basic concepts of plotting using the interactive package dygraphs.
+
+#### You may need to set your working directory:
+```{r}
+setwd("Z:/repos/katsmi/Stats_R_Visualisation/")
+```
+#### load in packages
+```{r}
+install.packages("dygraphs")
+library(dygraphs)
+install.packages("xts")
+library(xts)
+install.packages("dplyr")
+library(dplyr)
+```
+#### read in some flow data
+```{r}
+Thames_Obs<-read.csv("Qobs_39001.csv")
+```
+#### prep the data for dygraphs
+```{r}
+# format date column
+Thames_Obs$DATE<- as.POSIXct(Thames_Obs$DATE, format="%d/%m/%Y")
+# convert to xts format (crucial  step!)
+Thames_Obs_xts<-as.xts(Thames_Obs, order.by=Thames_Obs$DATE)
+```
+#### plot a dygraph
+```{r}
+dygraph(Thames_Obs_xts)%>%
+  dyOptions()%>%
+  dyRangeSelector()
+```
+#### plot observed streamflow with the precipitation data, with different y axes
+```{r}
+# read in precipitation data
+Thames_precip <- read.csv("MO_daily_rain_1891_2015_39001.csv")
+Thames_precip$DATE<-as.POSIXct(Thames_precip$DATE, format="%Y-%m-%d")
+# merge the data
+Thames_data<-full_join(Thames_Obs,Thames_precip,by="DATE")
+#  convert the observed discharge to runoff (so its in the same units as the precip)
+# divide by catchment area (m2) and mulitply by 86.4
+Thames_data$Runoff <- (Thames_data$Qobs/9948.0)*86.4
+# convert to xts - note that I am leaving out the Date column from the xts dataset. When given multiple series it often likes to plot the date column too which is a pain!
+Thames_data_xts <- as.xts(Thames_data[,3:4], order.by=Thames_data$DATE)
+# initiate the dygraph
+dygraph(Thames_data_xts, main = "Runoff and Precipitation Observations for the Thames at Kingston")%>%
+# define the first axis  
+dyAxis(name = "y", label = "runoff (mm/day)",
+       valueRange = range(Thames_data_xts[, "Runoff"],
+                          na.rm = TRUE)* c(0.01, 1.59))%>%
+# define the second axis
+dyAxis(name = "y2", label = "precip (mm/day)",
+                   valueRange = rev(range(Thames_data_xts[, "Mean_rainfall"], 
+                   na.rm = TRUE)* c(0.01, 2.99)))%>%
+# plot the data
+dySeries("Runoff",axis = 'y')%>%
+dySeries("Mean_rainfall", axis = 'y2', stepPlot = TRUE,
+         fillGraph = TRUE)%>%
+dyOptions(colors = RColorBrewer::brewer.pal(3,"Set1")[3:1]) %>%
+dyRangeSelector()
+```
+#### plot an upper and lower limit on a series
+```{r}
+#read in some modelled data
+Thames_Qsim <- read.csv("HD_Reconstruction_39001.csv")
+Thames_Qsim$Date<-as.POSIXct(Thames_Qsim$Date,format="%Y-%m-%d")
+#reorder so the lower, middle and upper columns are correctly placed
+Thames_Qsim<-Thames_Qsim[,c(2,4,3,5)]
+Thames_Qsim_xts<-as.xts(Thames_Qsim[,2:4],order.by=Thames_Qsim$Date)
+dygraph(Thames_Qsim_xts, main=paste0("Reconstucted Flow Time Series for the Thames at Kingston")) %>%
+  dySeries(c("Min_500","Flow_Top_Calib","Max_500"))%>%
+  dyAxis("y", label = "Flow (m3/s)")%>%
+  dyOptions(fillAlpha=0.5) %>%
+  dyRangeSelector(height=10)
+```
+#### plot the observations too for comparison
+```{r}
+colnames(Thames_Qsim)<-c("DATE","Min_500","Flow_Top_Calib","Max_500")
+Thames_comp<-full_join(Thames_Qsim,Thames_Obs,by="DATE")
+Thames_comp_xts<-as.xts(Thames_comp[,2:5],order.by=Thames_comp$DATE)
+dygraph(Thames_comp_xts, main=paste0("Reconstucted and Observed Flow Time Series for the Thames at Kingston")) %>%
+  dySeries(c("Min_500","Flow_Top_Calib","Max_500"))%>%
+  dySeries("Qobs")%>%
+  dyAxis("y", label = "Flow (m3/s)")%>%
+  dyOptions(fillAlpha=0.5) %>%
+  dyRangeSelector(height=10)
+```

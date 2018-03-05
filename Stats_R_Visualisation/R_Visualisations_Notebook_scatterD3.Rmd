@@ -1,0 +1,62 @@
+---
+title: "Stats and R Visualisation Notebook - ScatterD3"
+output:
+  html_document: default
+  html_notebook: default
+---
+Session lead: Katie Smith (Centre for Ecology & Hydrology) k.a.smith@ceh.ac.uk (01491 692209)
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+This session will show you the basic concepts of plotting using the interactive package scatterD3.
+
+#### You may need to set your working directory:
+```{r}
+setwd("Z:/repos/katsmi/Stats_R_Visualisation/")
+```
+### Lets start with scatterD3:
+
+```{r}
+install.packages("scatterD3")
+library(scatterD3)
+```
+#### Load in some data to look at
+```{r}
+metadata<-read.csv("NRFA_Master_Station_Metadata_Nov2016.csv")
+```
+
+#### Make a basic plot
+```{r}
+scatterD3(data=metadata,x=SQ_KM,y=MEAN_FLOW)
+```
+#### Add some tooltips so you can look at river names
+```{r}
+scatterD3(data=metadata,x=SQ_KM,y=MEAN_FLOW,tooltip_text=metadata$RIVER)
+```
+
+#### Colour the points by a variable
+```{r}
+scatterD3(data=metadata,x=SQ_KM,y=MEAN_FLOW,tooltip_text=metadata$RIVER,col_var = BASE_FLOW_INDEX)
+```
+#### Add symbols
+```{r}
+scatterD3(data=metadata,x=SQ_KM,y=MEAN_FLOW,tooltip_text=metadata$RIVER,col_var = BASE_FLOW_INDEX,symbol_var=FEH_POOLING)
+```
+#### Make the points vary in  size
+```{r}
+metadata$REC_LENGTH=metadata$END_YEAR-metadata$START_YEAR
+scatterD3(data=metadata,x=SQ_KM,y=MEAN_FLOW,tooltip_text=metadata$RIVER,col_var = BASE_FLOW_INDEX,symbol_var=FEH_POOLING,
+          size_var=REC_LENGTH)
+```
+#### Log the axes - it won't do this if there're NA values in your dataset...
+```{r}
+metadata<-metadata[which(!(is.na(metadata$MEAN_FLOW))),]
+scatterD3(data=metadata,x=SQ_KM,y=MEAN_FLOW,tooltip_text=metadata$RIVER,col_var = BASE_FLOW_INDEX,symbol_var=FEH_POOLING,
+          size_var=REC_LENGTH,x_log=TRUE,y_log=TRUE)
+```
+#### Tidy the graph up
+```{r}
+scatterD3(data=metadata,x=SQ_KM,y=MEAN_FLOW,tooltip_text=metadata$RIVER,col_var = BASE_FLOW_INDEX,symbol_var=FEH_POOLING,
+          size_var=REC_LENGTH,x_log=TRUE,y_log=TRUE,xlab="Catchment Area (sq km)",ylab="Mean Flow",col_lab="Base Flow Index",
+          symbol_lab="Suitabile for FEH Pooling?",size_lab="Record Length (Years)")
+```
