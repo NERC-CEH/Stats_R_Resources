@@ -1,0 +1,282 @@
+---
+title: "Structural equation modelling example"
+output: html_notebook
+---
+
+
+```{r}
+wd <- "C:\\simon\\RESIST\\Results\\"
+setwd(wd)
+```
+
+Load libraries. You may need to install some of these using `install.packages()`
+
+```{r}
+#install.packages("")
+library(PerformanceAnalytics)
+library(car)
+library(lme4)
+library(nlme)
+library(piecewiseSEM)
+```
+
+
+The first step is to use graphical data exploration and fit some linear random effects models to define the best component models that are then joined together to form the SEM.
+
+### First load the data and explore.
+
+```{r}
+# Read in data ....
+Agstab4<- read.csv("C:\\simon\\RESIST\\Results\\Agstab4.csv")
+# Generate correlation plot
+chart.Correlation(Agstab4, histogram=TRUE, pch=19)
+```
+
+Note the high correlations between soil aggregate stability (DR) and soil moisture, Carbon concn and bulk density... All expected. Also note the high correlations between these three soil variables. 
+
+### Begin the process of selecting variables and relationships to take forwards for SEM.
+
+
+Derive minimum adequate models i.e. the seperate multiple regressions that wil be the building blocks of the SEM. The following procedure is used based on Crawley, MJ (2007). The R Book. 1st edn:
+
+1. Use the 'anova' function to compare models
+
+2. Remove any non-signficant fixed effects
+
+3. Select the minimum adequate model
+
+Note that REML=FALSE when comparing models with different fixed effect.
+
+
+Model 1 only includes an intercept and the random effect structure (observations are nested within squares)
+```{r}
+M1 <- lmer(DR ~ 1 + (1|SQ), Agstab4, REML=FALSE)
+```
+
+Do variance components (see pg 640 of Crawley 1st edn) to get breakdown
+
+```{r}
+sds<-c(228.9,161.9)
+vars<-sds^2
+100*vars/sum(vars)
+```
+
+So...
+1km sqr   : 66.7%
+Residual  : 33.3% 
+
+This is interesting to know because it shows that most of the variation in aggregate stability is between 1km squares rather than between soil samples WITHIN 1km sample squares. All our predictors except climate are at soil sample level.
+
+Now start selecting the fixed effects. Use AIC and anova.
+
+
+
+```{r}
+(M1a <- lmer(DR ~ C_CONC_07_LOI + BULK_DENSITY_07 + MOISTURE_CONTENT_07 + PH2007 + (1|SQ)
+             , Agstab4, REML=FALSE))
+
+car::Anova(M1a)
+
+(M1b <- lmer(DR ~ C_CONC_07_LOI + BULK_DENSITY_07 + MOISTURE_CONTENT_07 + (1|SQ)
+             , Agstab4, REML=FALSE))
+
+#print("Model 1b")
+car::Anova(M1b)
+
+print("Compare model 1a and model 1b")
+anova(M1a,M1b)
+
+(M1c <- lmer(DR ~ C_CONC_07_LOI + BULK_DENSITY_07 +  (1|SQ)
+             , Agstab4, REML=FALSE))
+
+#print("Model 1c")
+car::Anova(M1c)
+
+(M1d <- lmer(DR ~ C_CONC_07_LOI  + (1|SQ)
+             , Agstab4, REML=FALSE))
+
+#print("Model 1d")
+car::Anova(M1d)
+
+```
+
+
+Can also look at AIC:
+
+M1a 3764.743
+M1b 3771.222
+M1c 3781.818
+M1d 3806.819
+
+### SEM model 1
+
+Select variables 
+
+```{r}
+Agstab5<-na.omit(Agstab4[,c(2,4:9)])
+names(Agstab5)[1]<-"Rain"
+names(Agstab5)[2]<-"Moisture"
+names(Agstab5)[3]<-"C_conc"
+names(Agstab5)[4]<-"BD"
+chart.Correlation(Agstab5[,-6], histogram=TRUE, pch=19)
+```
+
+Create component models for each variable and run piecewiseSEM
+
+```{r}
+Agstab_psem1 <- psem(
+  
+  # Predicting Agg stability
+  lme(DR ~ Rain + C_conc + BD + Moisture + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML"),
+  
+  # Predicting bulk density
+  lme(BD ~ Rain + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML"),
+  
+  # Predicting soil organic matter
+  lme(C_conc ~ Rain + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML"),
+  
+  # Predicting soil moisture
+  lme(Moisture ~ Rain, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML")
+)
+
+```
+
+
+Get a summary of the models
+
+
+```{r}
+DR.summary1 <- summary(Agstab_psem1, .progressBar=F, conditional = T)
+DR.summary1
+```
+
+
+### SEM model 2
+
+This model omits the soil moisture variable
+
+
+```{r}
+
+# Create component models and store in list
+Agstab_psem2 <- psem(
+  
+  # Predicting Agg stability
+  lme(DR ~ Rain + C_conc + BD + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5,  method = "ML"),
+  
+  # Predicting bulk density
+  #BD = alpha2 + b5.DCA1 +b6.Rain
+  lme(BD ~ Rain + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5,  method = "ML"),
+  
+  # Predicting soil organic matter
+  #SOM = alpha3 + b7.DCA1 + b7.Rain
+  lme(C_conc ~ Rain + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5,  method = "ML")
+  
+  # Predicting soil moisture
+  #lme(Moisture ~ Rain, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5)
+)
+
+# Get summary of model;
+
+DR.summary2 <- summary(Agstab_psem2, .progressBar=F, conditional = T)
+DR.summary2
+
+
+```
+
+
+To do a fair comparison, add in soil_moisture and compare the update with Agstab_psem2
+
+```{r}
+Agstab_psem2a<- update(Agstab_psem2, Moisture ~ 1)
+AIC(Agstab_psem2, Agstab_psem2a)
+```
+
+
+### SEM model 3
+
+This model excludes soil moisture and bulk density
+
+```{r}
+# Create component models and store in list
+Agstab_psem3 <- psem(
+  
+  # Predicting Agg stability
+  lme(DR ~ Rain + C_conc + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML"),
+  
+  # Predicting bulk density
+  #BD = alpha2 + b5.DCA1 +b6.Rain
+  #lme(BD ~ Rain + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML"),
+  
+  # Predicting soil organic matter
+  #SOM = alpha3 + b7.DCA1 + b7.Rain
+  lme(C_conc ~ Rain + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML")
+  
+  # Predicting soil moisture
+  #lme(Moisture ~ Rain, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML")
+)
+
+# Get summary of model;
+
+DR.summary3 <- summary(Agstab_psem3, .progressBar=F, conditional = T)
+DR.summary3
+```
+
+
+### SEM model 4
+
+This model excludes soil moisture and includes correlated errors for bulk density and carbon concentration. Is it a better fit to the data? Look at AIC, p values and marginal r-sqrd.
+
+```{r}
+# Create component models and store in list
+Agstab_psem4 <- psem(
+  
+  # Predicting bulk density
+  #BD = alpha2 + b5.DCA1 +b6.Rain
+  lme(BD ~ Rain + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML"),
+  
+  # Predicting soil organic matter
+  #SOM = alpha3 + b7.DCA1 + b7.Rain
+  lme(C_conc ~ Rain + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML"),
+  
+  # Correlated errors 
+  BD %~~% C_conc,
+  
+  # Predicting Agg stability
+  lme(DR ~ Rain + C_conc + BD + DCA1, random = ~ 1 | SQ, na.action = na.omit, data = Agstab5, method = "ML")
+  
+)
+
+# Get summary of model;
+
+DR.summary4 <- summary(Agstab_psem4, .progressBar=F, conditional = T)
+DR.summary4
+```
+
+### Shipley 2009 example
+
+Latitude --> Degree days --> Date bud burst --> Diameter tree growth --> Live/Dead
+
+
+```{r}
+shipley<- read.csv("C:\\simon\\RESIST\\R_area\\Shipley_2009.csv")
+
+shipley_psem <- psem(
+  
+  lme(DD ~ lat, random = ~ 1 | site / tree, na.action = na.omit,
+      data = shipley),
+  
+  lme(Date ~ DD, random = ~ 1 | site / tree, na.action = na.omit,
+      data = shipley),
+  
+  lme(Growth ~ Date, random = ~ 1 | site / tree, na.action = na.omit,
+      data = shipley),
+  
+  glmer(Live ~ Growth + (1 | site) + (1 | tree),
+        family = binomial(link = "logit"), data = shipley)
+  
+)
+
+summary(shipley_psem, .progressBar = FALSE)
+```
+
