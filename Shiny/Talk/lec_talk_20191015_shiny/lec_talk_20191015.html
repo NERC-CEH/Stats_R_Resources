@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Making any R code interactive – engaging stakeholders using shiny apps</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Michael Tso (mtso at ceh.ac.uk)" />
+    <link href="lec_talk_20191015_files/remark-css/default.css" rel="stylesheet" />
+    <link href="lec_talk_20191015_files/remark-css/rladies-fonts.css" rel="stylesheet" />
+    <script src="lec_talk_20191015_files/htmlwidgets/htmlwidgets.js"></script>
+    <script src="lec_talk_20191015_files/jquery/jquery.min.js"></script>
+    <link href="lec_talk_20191015_files/leaflet/leaflet.css" rel="stylesheet" />
+    <script src="lec_talk_20191015_files/leaflet/leaflet.js"></script>
+    <link href="lec_talk_20191015_files/leafletfix/leafletfix.css" rel="stylesheet" />
+    <script src="lec_talk_20191015_files/Proj4Leaflet/proj4-compressed.js"></script>
+    <script src="lec_talk_20191015_files/Proj4Leaflet/proj4leaflet.js"></script>
+    <link href="lec_talk_20191015_files/rstudio_leaflet/rstudio_leaflet.css" rel="stylesheet" />
+    <script src="lec_talk_20191015_files/leaflet-binding/leaflet.js"></script>
+    <link href="lec_talk_20191015_files/datatables-css/datatables-crosstalk.css" rel="stylesheet" />
+    <script src="lec_talk_20191015_files/datatables-binding/datatables.js"></script>
+    <link href="lec_talk_20191015_files/dt-core/css/jquery.dataTables.min.css" rel="stylesheet" />
+    <link href="lec_talk_20191015_files/dt-core/css/jquery.dataTables.extra.css" rel="stylesheet" />
+    <script src="lec_talk_20191015_files/dt-core/js/jquery.dataTables.min.js"></script>
+    <link href="lec_talk_20191015_files/crosstalk/css/crosstalk.css" rel="stylesheet" />
+    <script src="lec_talk_20191015_files/crosstalk/js/crosstalk.min.js"></script>
+    <script src="lec_talk_20191015_files/plotly-binding/plotly.js"></script>
+    <script src="lec_talk_20191015_files/typedarray/typedarray.min.js"></script>
+    <link href="lec_talk_20191015_files/plotly-htmlwidgets-css/plotly-htmlwidgets.css" rel="stylesheet" />
+    <script src="lec_talk_20191015_files/plotly-main/plotly-latest.min.js"></script>
+    <link rel="stylesheet" href="ceh.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Making any R code interactive – engaging stakeholders using shiny apps
+## <br/>LEC PGR Geospatial Data Science Working Group
+### Michael Tso (mtso <em>at</em> ceh.ac.uk)
+### October 2019
+
+---
+
+
+
+
+
+
+class: middle
+
+layout: true
+background-image: url(img/ceh_logo.png)
+background-position: 1% 99%
+background-size: 25%
+
+---
+
+# CEH Environmental Data Science Group
+
+--
+
+- Environmental Infomatics Data Centre
+
+- Speicialist data resources, portals and information products
+
+- Software development
+
+- National capability
+
+- DataLab initiative and the data science framework
+
+- Close collaboration with LU (e.g. LEC, DSI, DSNE) and other partners
+
+- My role
+
+
+---
+class: middle
+
+layout: true
+background-image: url(img/shiny_logo.png)
+background-position: 1% 99%
+background-size: 10%
+---
+
+# What is `shiny`?
+
+--
+
+- R package from RStudio
+&gt; .fancy["A simple, in-browser, markdown-driven slideshow tool targeted at people who know their way around HTML and CSS"]
+
+- Web application framework for R
+
+- R code → interactive web page
+
+- No HTML/CSS/JavaScript knowledge required
+
+- Great for sharing R analysis with someone scared of R (and others)
+
+
+---
+
+# Why sharing your work interactively using web apps/dashboards?
+
+--
+
+- Let the user explore the datset themselves (Guided tour)
+
+
+- Let the user try out your methods (e.g. using their own dataset)
+
+
+- Illustrate impact and engage stakeholders
+
+
+- Python equivalent? [Dash by plotly](https://plot.ly/dash/)
+
+
+---
+
+# Today's goal:
+
+???
+
+Awkwardly, this seems to work! (to hide or exclude sldie "exclude: true")
+
+--
+
+- Showcase a few R shiny apps (a flavour of what they can do)
+
+- Basic R shiny app concepts
+
+- Key resources and related R packages
+
+- A guide to make your first shiny app
+
+- Q&amp;A
+
+
+---
+class:  top, center, middle
+background-image: url("https://shiny.rstudio.com/gallery/images/screenshots/movie-explorer.png")
+background-size: contained
+background-position: center;
+---
+class:  top, center, middle
+background-image: url("https://shiny.rstudio.com/gallery/images/screenshots/retirement-simulation.png")
+background-size: contained
+background-position: center;
+---
+class:  top, center, middle
+background-image: url("https://shiny.rstudio.com/gallery/images/screenshots/superzip-example.png")
+background-size: contained
+background-position: center;
+---
+# [Changepoint analysis](https://datalab-changepoint.datalabs.ceh.ac.uk/)
+# for the UK National River Flow Archive (NRFA)
+
+---
+# [Nature's postcodes:](https://shiny-apps.ceh.ac.uk/natures_postcode/)
+# Which neigborhood is doing best in this species recording citizen science project?
+---
+exclude: true
+# [Soil hydraulic properties map](https://datalab-testmyenvr.datalabs.ceh.ac.uk/)
+# of the United Kingdom
+---
+
+layout: false
+class:  center, middle
+
+
+# **Crucial `shiny` concepts**
+
+(1) UI + server, (2) reactivity
+
+---
+class: middle
+layout: true
+background-image: url(img/shiny_logo.png)
+background-position: 1% 99%
+background-size: 10%
+---
+
+
+
+# What's in a `shiny` app?
+
+.shrink[
+.right[![Right-aligned image](img/Capture5.PNG)] ]
+
+- plus optional web elements (e.g. static images, css files)
+
+---
+# Two ways to run a `shiny` app
+
+- single file option
+.shrink[
+.shrink[
+.right[![Right-aligned image](img/Capture.PNG)] ]]
+
+- two file option - save UI as "ui.R" and server as "server.R" in the same directory
+.shrink[
+.shrink[
+.right[![Right-aligned image](img/Capture2.PNG)] ]]
+
+---
+# Making your `shiny` app available
+
+- Run it locally
+
+- Serve it on http://www.shinyapps.io/
+
+- Use other servers: Amazon Cloud, your institution etc.
+
+---
+# UI components
+
+- inputs (e.g. buttons, sliders, checkboxes, file upload box) ...`input$*`
+
+- outputs (e.g. plots, tables)
+
+- layouts (how do you want everything to be arranged) and HTML
+
+- check out the package `shinythemes`
+
+.shrink[
+.right[![Right-aligned image](img/Capture6.PNG)] ]
+
+---
+# UI components
+
+- everything is turned into HTML + JavaScript for you (it's just a webpage)
+
+
+```r
+sliderInput("num","Choose a number", min = 0, max=100, value = 20)
+```
+
+.shrink[
+.right[![Right-aligned image](img/Capture3.PNG)] ]
+
+---
+# Server components 
+
+- your analysis (does it react to user input?) 
+
+- If so, use `reactive` (assign), `observe` (access), `isoluate`
+
+- output components...`output$*`, use `render*( {} )`
+
+---
+# Reactivity
+
+- Shiny uses reactive programming and supports reactive variables
+
+- Unlike regular R, if `x` changes, anything that relies of `x` is re-evaluated.
+
+.shrink[
+.right[![Right-aligned image](img/Capture7.PNG)] ]
+---
+
+layout: false
+class:  center, middle
+
+# **Run your first `shiny` code**
+
+"Learning is doing."
+---
+class: middle
+layout: true
+background-image: url(img/shiny_logo.png)
+background-position: 1% 99%
+background-size: 10%
+
+
+---
+# Run your first `shiny` code
+
+```r
+shinyAppDir(
+  system.file("examples/06_tabsets", package="shiny"),
+  options = list(width = "100%", height = 700)
+)
+```
+View the code: 
+&lt;style type="text/css"&gt;
+pre {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+pre[class] {
+  max-height: 100px;
+}
+&lt;/style&gt;
+
+```r
+# file.show(system.file("examples/06_tabsets/app.R", package="shiny"))
+# https://dr-harper.github.io/rmarkdown-cookbook/html-scroll.html
+
+library(shiny)
+
+# Define UI for random distribution app ----
+ui &lt;- fluidPage(
+
+  # App title ----
+  titlePanel("Tabsets"),
+
+  # Sidebar layout with input and output definitions ----
+  sidebarLayout(
+
+    # Sidebar panel for inputs ----
+    sidebarPanel(
+
+      # Input: Select the random distribution type ----
+      radioButtons("dist", "Distribution type:",
+                   c("Normal" = "norm",
+                     "Uniform" = "unif",
+                     "Log-normal" = "lnorm",
+                     "Exponential" = "exp")),
+
+      # br() element to introduce extra vertical spacing ----
+      br(),
+
+      # Input: Slider for the number of observations to generate ----
+      sliderInput("n",
+                  "Number of observations:",
+                  value = 500,
+                  min = 1,
+                  max = 1000)
+
+    ),
+
+    # Main panel for displaying outputs ----
+    mainPanel(
+
+      # Output: Tabset w/ plot, summary, and table ----
+      tabsetPanel(type = "tabs",
+                  tabPanel("Plot", plotOutput("plot")),
+                  tabPanel("Summary", verbatimTextOutput("summary")),
+                  tabPanel("Table", tableOutput("table"))
+      )
+
+    )
+  )
+)
+
+# Define server logic for random distribution app ----
+server &lt;- function(input, output) {
+
+  # Reactive expression to generate the requested distribution ----
+  # This is called whenever the inputs change. The output functions
+  # defined below then use the value computed from this expression
+  d &lt;- reactive({
+    dist &lt;- switch(input$dist,
+                   norm = rnorm,
+                   unif = runif,
+                   lnorm = rlnorm,
+                   exp = rexp,
+                   rnorm)
+
+    dist(input$n)
+  })
+
+  # Generate a plot of the data ----
+  # Also uses the inputs to build the plot label. Note that the
+  # dependencies on the inputs and the data reactive expression are
+  # both tracked, and all expressions are called in the sequence
+  # implied by the dependency graph.
+  output$plot &lt;- renderPlot({
+    dist &lt;- input$dist
+    n &lt;- input$n
+
+    hist(d(),
+         main = paste("r", dist, "(", n, ")", sep = ""),
+         col = "#75AADB", border = "white")
+  })
+
+  # Generate a summary of the data ----
+  output$summary &lt;- renderPrint({
+    summary(d())
+  })
+
+  # Generate an HTML table view of the data ----
+  output$table &lt;- renderTable({
+    d()
+  })
+
+}
+
+# Create Shiny app ----
+shinyApp(ui, server)
+```
+
+---
+
+layout: false
+class:  center, middle
+
+# **Useful R packages to go with R `shiny`**
+
+"Make your app interactive and look pretty!"
+---
+class: middle
+layout: true
+background-image: url(img/shiny_logo.png)
+background-position: 1% 99%
+background-size: 10%
+---
+
+
+# Adding interactive maps using **leaflet**
+
+
+```r
+leaflet(data=ECN_site_info) %&gt;% addTiles() %&gt;%addMarkers(~long,~lat,label = paste0("T",ECN_site_info$sitecode,": ",ECN_site_info$name))
+```
+
+<div id="htmlwidget-36113898d7b0e0e96479" style="width:100%;height:432px;" class="leaflet html-widget"></div>
+<script type="application/json" data-for="htmlwidget-36113898d7b0e0e96479">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["//{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"http://openstreetmap.org\">OpenStreetMap<\/a> contributors, <a href=\"http://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA<\/a>"}]},{"method":"addMarkers","args":[[52.193875,56.9092667,54.4534,54.6950416666,50.781933335,51.803425,55.4898527778,51.78135,51.15457222,51.127175,53.07455,57.11634444],[-1.764430555,-2.55337222,-6.0781277778,-2.38785,-3.91780555553,-0.372683333,-2.2120333,-1.33605833333333,-0.86321666,-1.63985,-4.03351111,-3.82971667],null,null,null,{"interactive":true,"draggable":false,"keyboard":true,"title":"","alt":"","zIndexOffset":0,"opacity":1,"riseOnHover":false,"riseOffset":250},null,null,null,null,["T1: Drayton","T2: Glensaugh","T3: Hillsborough","T4: Moor House - Upper Teesdale","T5: North Wyke","T6: Rothamsted","T7: Sourhope","T8: Wytham","T9: Alice Holt","T10: Porton Down","T11: Y Wyddfa - Snowdon","T12: Cairngorms"],{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[50.781933335,57.11634444],"lng":[-6.0781277778,-0.372683333]}},"evals":[],"jsHooks":[]}</script>
+
+
+
+---
+exclude: true
+
+# The **r2d3** package
+
+- Full flexibility to custom build D3 visualizations (on top of what's been available as *htmlwidgets*)
+
+- Not limited to R figure types
+
+- It will take time to write the .js file
+
+.right[![center-aligned image](https://d33wubrfki0l68.cloudfront.net/91ab68ec36aed90251d389d43831a488ccd960cc/4e63d/images/r2d3-r-interface-to-d3-visualizations/baranim-1.gif)]
+
+---
+
+# Presenting tables
+
+If you want to generate a table, make sure it is in the HTML format (instead of Markdown or other formats), e.g.,
+
+
+```r
+knitr::kable(head(MEMSS::Theoph), format = 'html')
+```
+
+&lt;table&gt;
+ &lt;thead&gt;
+  &lt;tr&gt;
+   &lt;th style="text-align:left;"&gt; Subject &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Wt &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Dose &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; Time &lt;/th&gt;
+   &lt;th style="text-align:right;"&gt; conc &lt;/th&gt;
+  &lt;/tr&gt;
+ &lt;/thead&gt;
+&lt;tbody&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; A &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.02 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.00 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.74 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; A &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.02 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.25 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.84 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; A &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.02 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 0.57 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 6.57 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; A &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.02 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 1.12 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 10.50 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; A &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.02 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 2.02 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 9.66 &lt;/td&gt;
+  &lt;/tr&gt;
+  &lt;tr&gt;
+   &lt;td style="text-align:left;"&gt; A &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 79.6 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 4.02 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 3.82 &lt;/td&gt;
+   &lt;td style="text-align:right;"&gt; 8.58 &lt;/td&gt;
+  &lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+---
+# Using the package **DT**
+
+
+
+```r
+DT::datatable(
+  head(MEMSS::Theoph, 120),
+  fillContainer = FALSE, options = list(pageLength = 7)
+)
+```
+
+<div id="htmlwidget-294f3fb7c3243b6e45fa" style="width:100%;height:auto;" class="datatables html-widget"></div>
+<script type="application/json" data-for="htmlwidget-294f3fb7c3243b6e45fa">{"x":{"filter":"none","fillContainer":false,"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71","72","73","74","75","76","77","78","79","80","81","82","83","84","85","86","87","88","89","90","91","92","93","94","95","96","97","98","99","100","101","102","103","104","105","106","107","108","109","110","111","112","113","114","115","116","117","118","119","120"],["A","A","A","A","A","A","A","A","A","A","A","B","B","B","B","B","B","B","B","B","B","B","C","C","C","C","C","C","C","C","C","C","C","D","D","D","D","D","D","D","D","D","D","D","E","E","E","E","E","E","E","E","E","E","E","F","F","F","F","F","F","F","F","F","F","F","G","G","G","G","G","G","G","G","G","G","G","H","H","H","H","H","H","H","H","H","H","H","I","I","I","I","I","I","I","I","I","I","I","J","J","J","J","J","J","J","J","J","J","J","K","K","K","K","K","K","K","K","K","K"],[79.6,79.6,79.6,79.6,79.6,79.6,79.6,79.6,79.6,79.6,79.6,58.2,58.2,58.2,58.2,58.2,58.2,58.2,58.2,58.2,58.2,58.2,65,65,65,65,65,65,65,65,65,65,65,60.5,60.5,60.5,60.5,60.5,60.5,60.5,60.5,60.5,60.5,60.5,72.4,72.4,72.4,72.4,72.4,72.4,72.4,72.4,72.4,72.4,72.4,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,72.7,72.7,72.7,72.7,72.7,72.7,72.7,72.7,72.7,72.7,72.7,54.6,54.6,54.6,54.6,54.6,54.6,54.6,54.6,54.6,54.6,54.6,80,80,80,80,80,80,80,80,80,80,80,64.6,64.6,64.6,64.6,64.6,64.6,64.6,64.6,64.6,64.6,64.6,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5,70.5],[4.02,4.02,4.02,4.02,4.02,4.02,4.02,4.02,4.02,4.02,4.02,5.5,5.5,5.5,5.5,5.5,5.5,5.5,5.5,5.5,5.5,5.5,4.92,4.92,4.92,4.92,4.92,4.92,4.92,4.92,4.92,4.92,4.92,5.3,5.3,5.3,5.3,5.3,5.3,5.3,5.3,5.3,5.3,5.3,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.53,4.53,4.53,4.53,4.53,4.53,4.53,4.53,4.53,4.53,4.53,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,4.4,5.86,5.86,5.86,5.86,5.86,5.86,5.86,5.86,5.86,5.86,5.86,4,4,4,4,4,4,4,4,4,4,4,4.95,4.95,4.95,4.95,4.95,4.95,4.95,4.95,4.95,4.95,4.95,4.53,4.53,4.53,4.53,4.53,4.53,4.53,4.53,4.53,4.53],[0,0.25,0.57,1.12,2.02,3.82,5.1,7.03,9.05,12.12,24.37,0,0.37,0.77,1.02,2.05,3.55,5.05,7.08,9.38,12.1,23.7,0,0.25,0.5,0.98,1.98,3.6,5.02,7.03,9.03,12.12,24.08,0,0.25,0.5,1,2,3.52,5.07,7.07,9.03,12.05,24.15,0,0.27,0.52,1,1.92,3.5,5.02,7.03,9,12,24.3,0,0.27,0.58,1.02,2.02,3.62,5.08,7.07,9,12.15,24.17,0,0.35,0.6,1.07,2.13,3.5,5.02,7.02,9.02,11.98,24.65,0,0.3,0.52,1,2.02,3.5,5.02,7.02,9.1,12,24.35,0,0.27,0.58,1.15,2.03,3.57,5,7,9.22,12.1,23.85,0,0.25,0.5,1.02,2.02,3.48,5,6.98,9,12.05,24.22,0,0.25,0.52,0.98,2.02,3.53,5.05,7.15,9.07,12.1],[0.74,2.84,6.57,10.5,9.66,8.58,8.36,7.47,6.89,5.94,3.28,0.24,2.89,5.22,6.41,7.83,10.21,9.18,8.02,7.14,5.68,2.42,0,4.86,7.24,8,6.81,5.87,5.22,4.45,3.62,2.69,0.86,0,1.25,3.96,7.82,9.72,9.75,8.57,6.59,6.11,4.57,1.17,0,1.72,7.91,8.31,8.33,6.85,6.08,5.4,4.55,3.01,0.9,0,4.4,6.9,8.2,7.8,7.5,6.2,5.3,4.9,3.7,1.05,0,1.89,4.6,8.6,8.38,7.54,6.88,5.78,5.33,4.19,1.15,0,2.02,5.63,11.4,9.33,8.74,7.56,7.09,5.9,4.37,1.57,0,1.29,3.08,6.44,6.32,5.53,4.94,4.02,3.46,2.78,0.92,0.15,0.85,2.35,5.02,6.58,7.09,6.66,5.25,4.39,3.53,1.15,0,3.05,3.05,7.31,7.56,6.59,5.88,4.73,4.57,3]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Subject<\/th>\n      <th>Wt<\/th>\n      <th>Dose<\/th>\n      <th>Time<\/th>\n      <th>conc<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"pageLength":7,"columnDefs":[{"className":"dt-right","targets":[2,3,4,5]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false,"lengthMenu":[7,10,25,50,100]}},"evals":[],"jsHooks":[]}</script>
+---
+exclude: true
+name: pull-demo
+
+.left-column[
+# `plotly` for nice interactive plots
+
+]
+
+
+.right-column[
+
+- Works for most `ggplot2` functions
+- You may try `ggvis` and `googlevis` packages too
+
+
+```r
+p = ggplot(data = mtcars, aes(x = disp, y = cyl)) + 
+      geom_point() + geom_smooth(method=lm) + ggtitle('cars')
+ggplotly(p)
+```
+
+<div id="htmlwidget-408c5ec3dc88ede8d309" style="width:75%;height:75%;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-408c5ec3dc88ede8d309">{"x":{"data":[{"x":[160,160,108,258,360,225,360,146.7,140.8,167.6,167.6,275.8,275.8,275.8,472,460,440,78.7,75.7,71.1,120.1,318,304,350,400,79,120.3,95.1,351,145,301,121],"y":[6,6,4,6,8,6,8,4,4,6,6,8,8,8,8,8,8,4,4,4,4,8,8,8,8,4,4,4,8,6,8,4],"text":["disp: 160.0<br />cyl: 6","disp: 160.0<br />cyl: 6","disp: 108.0<br />cyl: 4","disp: 258.0<br />cyl: 6","disp: 360.0<br />cyl: 8","disp: 225.0<br />cyl: 6","disp: 360.0<br />cyl: 8","disp: 146.7<br />cyl: 4","disp: 140.8<br />cyl: 4","disp: 167.6<br />cyl: 6","disp: 167.6<br />cyl: 6","disp: 275.8<br />cyl: 8","disp: 275.8<br />cyl: 8","disp: 275.8<br />cyl: 8","disp: 472.0<br />cyl: 8","disp: 460.0<br />cyl: 8","disp: 440.0<br />cyl: 8","disp:  78.7<br />cyl: 4","disp:  75.7<br />cyl: 4","disp:  71.1<br />cyl: 4","disp: 120.1<br />cyl: 4","disp: 318.0<br />cyl: 8","disp: 304.0<br />cyl: 8","disp: 350.0<br />cyl: 8","disp: 400.0<br />cyl: 8","disp:  79.0<br />cyl: 4","disp: 120.3<br />cyl: 4","disp:  95.1<br />cyl: 4","disp: 351.0<br />cyl: 8","disp: 145.0<br />cyl: 6","disp: 301.0<br />cyl: 8","disp: 121.0<br />cyl: 4"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[71.1,76.1746835443038,81.2493670886076,86.3240506329114,91.3987341772152,96.473417721519,101.548101265823,106.622784810127,111.69746835443,116.772151898734,121.846835443038,126.921518987342,131.996202531646,137.070886075949,142.145569620253,147.220253164557,152.294936708861,157.369620253165,162.444303797468,167.518987341772,172.593670886076,177.66835443038,182.743037974684,187.817721518987,192.892405063291,197.967088607595,203.041772151899,208.116455696203,213.191139240506,218.26582278481,223.340506329114,228.415189873418,233.489873417721,238.564556962025,243.639240506329,248.713924050633,253.788607594937,258.86329113924,263.937974683544,269.012658227848,274.087341772152,279.162025316456,284.236708860759,289.311392405063,294.386075949367,299.460759493671,304.535443037975,309.610126582278,314.684810126582,319.759493670886,324.83417721519,329.908860759494,334.983544303797,340.058227848101,345.132911392405,350.207594936709,355.282278481013,360.356962025316,365.43164556962,370.506329113924,375.581012658228,380.655696202532,385.730379746835,390.805063291139,395.879746835443,400.954430379747,406.029113924051,411.103797468354,416.178481012658,421.253164556962,426.327848101266,431.40253164557,436.477215189873,441.551898734177,446.626582278481,451.701265822785,456.775949367089,461.850632911392,466.925316455696,472],"y":[4.11272857060719,4.17868950754601,4.24465044448483,4.31061138142365,4.37657231836247,4.44253325530129,4.50849419224011,4.57445512917893,4.64041606611775,4.70637700305658,4.7723379399954,4.83829887693422,4.90425981387304,4.97022075081186,5.03618168775068,5.1021426246895,5.16810356162832,5.23406449856714,5.30002543550596,5.36598637244479,5.43194730938361,5.49790824632243,5.56386918326125,5.62983012020007,5.69579105713889,5.76175199407771,5.82771293101653,5.89367386795535,5.95963480489417,6.025595741833,6.09155667877182,6.15751761571064,6.22347855264946,6.28943948958828,6.3554004265271,6.42136136346592,6.48732230040474,6.55328323734356,6.61924417428238,6.68520511122121,6.75116604816003,6.81712698509885,6.88308792203767,6.94904885897649,7.01500979591531,7.08097073285413,7.14693166979295,7.21289260673177,7.27885354367059,7.34481448060941,7.41077541754824,7.47673635448706,7.54269729142588,7.6086582283647,7.67461916530352,7.74058010224234,7.80654103918116,7.87250197611998,7.9384629130588,8.00442384999763,8.07038478693645,8.13634572387527,8.20230666081409,8.26826759775291,8.33422853469173,8.40018947163055,8.46615040856937,8.53211134550819,8.59807228244701,8.66403321938584,8.72999415632466,8.79595509326348,8.8619160302023,8.92787696714112,8.99383790407994,9.05979884101876,9.12575977795758,9.1917207148964,9.25768165183522,9.32364258877405],"text":["disp:  71.10000<br />cyl: 4.112729","disp:  76.17468<br />cyl: 4.178690","disp:  81.24937<br />cyl: 4.244650","disp:  86.32405<br />cyl: 4.310611","disp:  91.39873<br />cyl: 4.376572","disp:  96.47342<br />cyl: 4.442533","disp: 101.54810<br />cyl: 4.508494","disp: 106.62278<br />cyl: 4.574455","disp: 111.69747<br />cyl: 4.640416","disp: 116.77215<br />cyl: 4.706377","disp: 121.84684<br />cyl: 4.772338","disp: 126.92152<br />cyl: 4.838299","disp: 131.99620<br />cyl: 4.904260","disp: 137.07089<br />cyl: 4.970221","disp: 142.14557<br />cyl: 5.036182","disp: 147.22025<br />cyl: 5.102143","disp: 152.29494<br />cyl: 5.168104","disp: 157.36962<br />cyl: 5.234064","disp: 162.44430<br />cyl: 5.300025","disp: 167.51899<br />cyl: 5.365986","disp: 172.59367<br />cyl: 5.431947","disp: 177.66835<br />cyl: 5.497908","disp: 182.74304<br />cyl: 5.563869","disp: 187.81772<br />cyl: 5.629830","disp: 192.89241<br />cyl: 5.695791","disp: 197.96709<br />cyl: 5.761752","disp: 203.04177<br />cyl: 5.827713","disp: 208.11646<br />cyl: 5.893674","disp: 213.19114<br />cyl: 5.959635","disp: 218.26582<br />cyl: 6.025596","disp: 223.34051<br />cyl: 6.091557","disp: 228.41519<br />cyl: 6.157518","disp: 233.48987<br />cyl: 6.223479","disp: 238.56456<br />cyl: 6.289439","disp: 243.63924<br />cyl: 6.355400","disp: 248.71392<br />cyl: 6.421361","disp: 253.78861<br />cyl: 6.487322","disp: 258.86329<br />cyl: 6.553283","disp: 263.93797<br />cyl: 6.619244","disp: 269.01266<br />cyl: 6.685205","disp: 274.08734<br />cyl: 6.751166","disp: 279.16203<br />cyl: 6.817127","disp: 284.23671<br />cyl: 6.883088","disp: 289.31139<br />cyl: 6.949049","disp: 294.38608<br />cyl: 7.015010","disp: 299.46076<br />cyl: 7.080971","disp: 304.53544<br />cyl: 7.146932","disp: 309.61013<br />cyl: 7.212893","disp: 314.68481<br />cyl: 7.278854","disp: 319.75949<br />cyl: 7.344814","disp: 324.83418<br />cyl: 7.410775","disp: 329.90886<br />cyl: 7.476736","disp: 334.98354<br />cyl: 7.542697","disp: 340.05823<br />cyl: 7.608658","disp: 345.13291<br />cyl: 7.674619","disp: 350.20759<br />cyl: 7.740580","disp: 355.28228<br />cyl: 7.806541","disp: 360.35696<br />cyl: 7.872502","disp: 365.43165<br />cyl: 7.938463","disp: 370.50633<br />cyl: 8.004424","disp: 375.58101<br />cyl: 8.070385","disp: 380.65570<br />cyl: 8.136346","disp: 385.73038<br />cyl: 8.202307","disp: 390.80506<br />cyl: 8.268268","disp: 395.87975<br />cyl: 8.334229","disp: 400.95443<br />cyl: 8.400189","disp: 406.02911<br />cyl: 8.466150","disp: 411.10380<br />cyl: 8.532111","disp: 416.17848<br />cyl: 8.598072","disp: 421.25316<br />cyl: 8.664033","disp: 426.32785<br />cyl: 8.729994","disp: 431.40253<br />cyl: 8.795955","disp: 436.47722<br />cyl: 8.861916","disp: 441.55190<br />cyl: 8.927877","disp: 446.62658<br />cyl: 8.993838","disp: 451.70127<br />cyl: 9.059799","disp: 456.77595<br />cyl: 9.125760","disp: 461.85063<br />cyl: 9.191721","disp: 466.92532<br />cyl: 9.257682","disp: 472.00000<br />cyl: 9.323643"],"type":"scatter","mode":"lines","name":"fitted values","line":{"width":3.77952755905512,"color":"rgba(51,102,255,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[71.1,76.1746835443038,81.2493670886076,86.3240506329114,91.3987341772152,96.473417721519,101.548101265823,106.622784810127,111.69746835443,116.772151898734,121.846835443038,126.921518987342,131.996202531646,137.070886075949,142.145569620253,147.220253164557,152.294936708861,157.369620253165,162.444303797468,167.518987341772,172.593670886076,177.66835443038,182.743037974684,187.817721518987,192.892405063291,197.967088607595,203.041772151899,208.116455696203,213.191139240506,218.26582278481,223.340506329114,228.415189873418,233.489873417721,238.564556962025,243.639240506329,248.713924050633,253.788607594937,258.86329113924,263.937974683544,269.012658227848,274.087341772152,279.162025316456,284.236708860759,289.311392405063,294.386075949367,299.460759493671,304.535443037975,309.610126582278,314.684810126582,319.759493670886,324.83417721519,329.908860759494,334.983544303797,340.058227848101,345.132911392405,350.207594936709,355.282278481013,360.356962025316,365.43164556962,370.506329113924,375.581012658228,380.655696202532,385.730379746835,390.805063291139,395.879746835443,400.954430379747,406.029113924051,411.103797468354,416.178481012658,421.253164556962,426.327848101266,431.40253164557,436.477215189873,441.551898734177,446.626582278481,451.701265822785,456.775949367089,461.850632911392,466.925316455696,472,472,472,466.925316455696,461.850632911392,456.775949367089,451.701265822785,446.626582278481,441.551898734177,436.477215189873,431.40253164557,426.327848101266,421.253164556962,416.178481012658,411.103797468354,406.029113924051,400.954430379747,395.879746835443,390.805063291139,385.730379746835,380.655696202532,375.581012658228,370.506329113924,365.43164556962,360.356962025316,355.282278481013,350.207594936709,345.132911392405,340.058227848101,334.983544303797,329.908860759494,324.83417721519,319.759493670886,314.684810126582,309.610126582278,304.535443037975,299.460759493671,294.386075949367,289.311392405063,284.236708860759,279.162025316456,274.087341772152,269.012658227848,263.937974683544,258.86329113924,253.788607594937,248.713924050633,243.639240506329,238.564556962025,233.489873417721,228.415189873418,223.340506329114,218.26582278481,213.191139240506,208.116455696203,203.041772151899,197.967088607595,192.892405063291,187.817721518987,182.743037974684,177.66835443038,172.593670886076,167.518987341772,162.444303797468,157.369620253165,152.294936708861,147.220253164557,142.145569620253,137.070886075949,131.996202531646,126.921518987342,121.846835443038,116.772151898734,111.69746835443,106.622784810127,101.548101265823,96.473417721519,91.3987341772152,86.3240506329114,81.2493670886076,76.1746835443038,71.1,71.1],"y":[3.64678548330433,3.72204205091393,3.7971821304815,3.87219840514371,3.94708304393352,4.02182767027349,4.09642333056352,4.17086046350879,4.24512887100877,4.31921769163288,4.39311537793952,4.46680967915372,4.54028763099612,4.61353555474397,4.68653906788719,4.7592831089965,4.83175197961527,4.90392940608325,4.97579862415128,5.04734248899758,5.11854361275476,5.18938453085124,5.25984789732738,5.3299167077977,5.39957454692718,5.46880585525628,5.53759620808595,5.60593259711853,5.67380370388027,5.74120015287976,5.80811473221042,5.87454257004373,5.94048125722939,6.00593090893299,6.0708941616743,6.135376105942,6.1993841583555,6.26292788072391,6.32601875598802,6.38866993270895,6.45089595041152,6.51271245776199,6.57413593442348,6.63518342572044,6.69587229720908,6.75622001412798,6.81624394868579,6.87596121636549,6.93538854096656,6.99454214699453,7.05343767723135,7.11209013284374,7.17051383315841,7.22872239219979,7.28672870919259,7.34454497043359,7.40218266019438,7.45965257860065,7.51696486472103,7.57412902337495,7.63115395442449,7.68804798354496,7.74481889366988,7.80147395647965,7.85801996344914,7.9144632560915,7.97080975513572,8.0270649884562,8.08323411763781,8.13932196311059,8.19533302782829,8.25127151949493,8.30714137136616,8.3629462616688,8.41868963169327,8.47437470262123,8.53000449115533,8.58558182402039,8.64110935140553,8.69658955941596,8.69658955941596,9.95069561813213,9.87425395226492,9.79785960577241,9.72151506475984,9.64522297941629,9.56898617646661,9.49280767261344,9.41669068903844,9.34063866703202,9.26465528482102,9.18874447566109,9.11291044725622,9.03715770256019,8.96149106200303,8.8859156871696,8.81043710593432,8.73506123902616,8.6597944279583,8.58464346420558,8.5096156194484,8.4347186766203,8.35996096139657,8.28535137363932,8.21089941816794,8.13661523405109,8.06250962141445,7.98859406452961,7.91488074969334,7.84138257613037,7.76811315786512,7.6950868142243,7.62231854637463,7.54982399709806,7.47761939090011,7.40572145158028,7.33414729462154,7.26291429223254,7.19203990965185,7.1215415124357,7.05143614590853,6.98174028973346,6.91246959257675,6.84363859396322,6.77526044245398,6.70734662098984,6.6399066913799,6.57294807024356,6.50647584806953,6.44049266137754,6.37499862533322,6.30999133078623,6.24546590590807,6.18141513879218,6.11782965394712,6.05469813289914,5.9920075673506,5.92974353260244,5.86789046919512,5.80643196179362,5.74535100601245,5.68463025589199,5.62425224686065,5.56419959105104,5.50445514364138,5.4450021403825,5.38582430761417,5.32690594687975,5.26823199674995,5.20978807471472,5.15156050205128,5.09353631448027,5.03570326122674,4.97804979484908,4.9205650539167,4.8632388403291,4.80606159279142,4.74902435770359,4.69211875848816,4.63533696417808,4.57867165791005,3.64678548330433],"text":["disp:  71.10000<br />cyl: 4.112729","disp:  76.17468<br />cyl: 4.178690","disp:  81.24937<br />cyl: 4.244650","disp:  86.32405<br />cyl: 4.310611","disp:  91.39873<br />cyl: 4.376572","disp:  96.47342<br />cyl: 4.442533","disp: 101.54810<br />cyl: 4.508494","disp: 106.62278<br />cyl: 4.574455","disp: 111.69747<br />cyl: 4.640416","disp: 116.77215<br />cyl: 4.706377","disp: 121.84684<br />cyl: 4.772338","disp: 126.92152<br />cyl: 4.838299","disp: 131.99620<br />cyl: 4.904260","disp: 137.07089<br />cyl: 4.970221","disp: 142.14557<br />cyl: 5.036182","disp: 147.22025<br />cyl: 5.102143","disp: 152.29494<br />cyl: 5.168104","disp: 157.36962<br />cyl: 5.234064","disp: 162.44430<br />cyl: 5.300025","disp: 167.51899<br />cyl: 5.365986","disp: 172.59367<br />cyl: 5.431947","disp: 177.66835<br />cyl: 5.497908","disp: 182.74304<br />cyl: 5.563869","disp: 187.81772<br />cyl: 5.629830","disp: 192.89241<br />cyl: 5.695791","disp: 197.96709<br />cyl: 5.761752","disp: 203.04177<br />cyl: 5.827713","disp: 208.11646<br />cyl: 5.893674","disp: 213.19114<br />cyl: 5.959635","disp: 218.26582<br />cyl: 6.025596","disp: 223.34051<br />cyl: 6.091557","disp: 228.41519<br />cyl: 6.157518","disp: 233.48987<br />cyl: 6.223479","disp: 238.56456<br />cyl: 6.289439","disp: 243.63924<br />cyl: 6.355400","disp: 248.71392<br />cyl: 6.421361","disp: 253.78861<br />cyl: 6.487322","disp: 258.86329<br />cyl: 6.553283","disp: 263.93797<br />cyl: 6.619244","disp: 269.01266<br />cyl: 6.685205","disp: 274.08734<br />cyl: 6.751166","disp: 279.16203<br />cyl: 6.817127","disp: 284.23671<br />cyl: 6.883088","disp: 289.31139<br />cyl: 6.949049","disp: 294.38608<br />cyl: 7.015010","disp: 299.46076<br />cyl: 7.080971","disp: 304.53544<br />cyl: 7.146932","disp: 309.61013<br />cyl: 7.212893","disp: 314.68481<br />cyl: 7.278854","disp: 319.75949<br />cyl: 7.344814","disp: 324.83418<br />cyl: 7.410775","disp: 329.90886<br />cyl: 7.476736","disp: 334.98354<br />cyl: 7.542697","disp: 340.05823<br />cyl: 7.608658","disp: 345.13291<br />cyl: 7.674619","disp: 350.20759<br />cyl: 7.740580","disp: 355.28228<br />cyl: 7.806541","disp: 360.35696<br />cyl: 7.872502","disp: 365.43165<br />cyl: 7.938463","disp: 370.50633<br />cyl: 8.004424","disp: 375.58101<br />cyl: 8.070385","disp: 380.65570<br />cyl: 8.136346","disp: 385.73038<br />cyl: 8.202307","disp: 390.80506<br />cyl: 8.268268","disp: 395.87975<br />cyl: 8.334229","disp: 400.95443<br />cyl: 8.400189","disp: 406.02911<br />cyl: 8.466150","disp: 411.10380<br />cyl: 8.532111","disp: 416.17848<br />cyl: 8.598072","disp: 421.25316<br />cyl: 8.664033","disp: 426.32785<br />cyl: 8.729994","disp: 431.40253<br />cyl: 8.795955","disp: 436.47722<br />cyl: 8.861916","disp: 441.55190<br />cyl: 8.927877","disp: 446.62658<br />cyl: 8.993838","disp: 451.70127<br />cyl: 9.059799","disp: 456.77595<br />cyl: 9.125760","disp: 461.85063<br />cyl: 9.191721","disp: 466.92532<br />cyl: 9.257682","disp: 472.00000<br />cyl: 9.323643","disp: 472.00000<br />cyl: 9.323643","disp: 472.00000<br />cyl: 9.323643","disp: 466.92532<br />cyl: 9.257682","disp: 461.85063<br />cyl: 9.191721","disp: 456.77595<br />cyl: 9.125760","disp: 451.70127<br />cyl: 9.059799","disp: 446.62658<br />cyl: 8.993838","disp: 441.55190<br />cyl: 8.927877","disp: 436.47722<br />cyl: 8.861916","disp: 431.40253<br />cyl: 8.795955","disp: 426.32785<br />cyl: 8.729994","disp: 421.25316<br />cyl: 8.664033","disp: 416.17848<br />cyl: 8.598072","disp: 411.10380<br />cyl: 8.532111","disp: 406.02911<br />cyl: 8.466150","disp: 400.95443<br />cyl: 8.400189","disp: 395.87975<br />cyl: 8.334229","disp: 390.80506<br />cyl: 8.268268","disp: 385.73038<br />cyl: 8.202307","disp: 380.65570<br />cyl: 8.136346","disp: 375.58101<br />cyl: 8.070385","disp: 370.50633<br />cyl: 8.004424","disp: 365.43165<br />cyl: 7.938463","disp: 360.35696<br />cyl: 7.872502","disp: 355.28228<br />cyl: 7.806541","disp: 350.20759<br />cyl: 7.740580","disp: 345.13291<br />cyl: 7.674619","disp: 340.05823<br />cyl: 7.608658","disp: 334.98354<br />cyl: 7.542697","disp: 329.90886<br />cyl: 7.476736","disp: 324.83418<br />cyl: 7.410775","disp: 319.75949<br />cyl: 7.344814","disp: 314.68481<br />cyl: 7.278854","disp: 309.61013<br />cyl: 7.212893","disp: 304.53544<br />cyl: 7.146932","disp: 299.46076<br />cyl: 7.080971","disp: 294.38608<br />cyl: 7.015010","disp: 289.31139<br />cyl: 6.949049","disp: 284.23671<br />cyl: 6.883088","disp: 279.16203<br />cyl: 6.817127","disp: 274.08734<br />cyl: 6.751166","disp: 269.01266<br />cyl: 6.685205","disp: 263.93797<br />cyl: 6.619244","disp: 258.86329<br />cyl: 6.553283","disp: 253.78861<br />cyl: 6.487322","disp: 248.71392<br />cyl: 6.421361","disp: 243.63924<br />cyl: 6.355400","disp: 238.56456<br />cyl: 6.289439","disp: 233.48987<br />cyl: 6.223479","disp: 228.41519<br />cyl: 6.157518","disp: 223.34051<br />cyl: 6.091557","disp: 218.26582<br />cyl: 6.025596","disp: 213.19114<br />cyl: 5.959635","disp: 208.11646<br />cyl: 5.893674","disp: 203.04177<br />cyl: 5.827713","disp: 197.96709<br />cyl: 5.761752","disp: 192.89241<br />cyl: 5.695791","disp: 187.81772<br />cyl: 5.629830","disp: 182.74304<br />cyl: 5.563869","disp: 177.66835<br />cyl: 5.497908","disp: 172.59367<br />cyl: 5.431947","disp: 167.51899<br />cyl: 5.365986","disp: 162.44430<br />cyl: 5.300025","disp: 157.36962<br />cyl: 5.234064","disp: 152.29494<br />cyl: 5.168104","disp: 147.22025<br />cyl: 5.102143","disp: 142.14557<br />cyl: 5.036182","disp: 137.07089<br />cyl: 4.970221","disp: 131.99620<br />cyl: 4.904260","disp: 126.92152<br />cyl: 4.838299","disp: 121.84684<br />cyl: 4.772338","disp: 116.77215<br />cyl: 4.706377","disp: 111.69747<br />cyl: 4.640416","disp: 106.62278<br />cyl: 4.574455","disp: 101.54810<br />cyl: 4.508494","disp:  96.47342<br />cyl: 4.442533","disp:  91.39873<br />cyl: 4.376572","disp:  86.32405<br />cyl: 4.310611","disp:  81.24937<br />cyl: 4.244650","disp:  76.17468<br />cyl: 4.178690","disp:  71.10000<br />cyl: 4.112729","disp:  71.10000<br />cyl: 4.112729"],"type":"scatter","mode":"lines","line":{"width":3.77952755905512,"color":"transparent","dash":"solid"},"fill":"toself","fillcolor":"rgba(153,153,153,0.4)","hoveron":"points","hoverinfo":"x+y","showlegend":false,"xaxis":"x","yaxis":"y","frame":null}],"layout":{"margin":{"t":40.8401826484018,"r":7.30593607305936,"b":37.2602739726027,"l":37.2602739726027},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"title":"cars","titlefont":{"color":"rgba(0,0,0,1)","family":"","size":17.5342465753425},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[51.055,492.045],"tickmode":"array","ticktext":["100","200","300","400"],"tickvals":[100,200,300,400],"categoryorder":"array","categoryarray":["100","200","300","400"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":"disp","titlefont":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[3.33158997656294,10.2658911248735],"tickmode":"array","ticktext":["4","6","8","10"],"tickvals":[4,6,8,10],"categoryorder":"array","categoryarray":["4","6","8","10"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":"cyl","titlefont":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":[{"name":"Collaborate","icon":{"width":1000,"ascent":500,"descent":-50,"path":"M487 375c7-10 9-23 5-36l-79-259c-3-12-11-23-22-31-11-8-22-12-35-12l-263 0c-15 0-29 5-43 15-13 10-23 23-28 37-5 13-5 25-1 37 0 0 0 3 1 7 1 5 1 8 1 11 0 2 0 4-1 6 0 3-1 5-1 6 1 2 2 4 3 6 1 2 2 4 4 6 2 3 4 5 5 7 5 7 9 16 13 26 4 10 7 19 9 26 0 2 0 5 0 9-1 4-1 6 0 8 0 2 2 5 4 8 3 3 5 5 5 7 4 6 8 15 12 26 4 11 7 19 7 26 1 1 0 4 0 9-1 4-1 7 0 8 1 2 3 5 6 8 4 4 6 6 6 7 4 5 8 13 13 24 4 11 7 20 7 28 1 1 0 4 0 7-1 3-1 6-1 7 0 2 1 4 3 6 1 1 3 4 5 6 2 3 3 5 5 6 1 2 3 5 4 9 2 3 3 7 5 10 1 3 2 6 4 10 2 4 4 7 6 9 2 3 4 5 7 7 3 2 7 3 11 3 3 0 8 0 13-1l0-1c7 2 12 2 14 2l218 0c14 0 25-5 32-16 8-10 10-23 6-37l-79-259c-7-22-13-37-20-43-7-7-19-10-37-10l-248 0c-5 0-9-2-11-5-2-3-2-7 0-12 4-13 18-20 41-20l264 0c5 0 10 2 16 5 5 3 8 6 10 11l85 282c2 5 2 10 2 17 7-3 13-7 17-13z m-304 0c-1-3-1-5 0-7 1-1 3-2 6-2l174 0c2 0 4 1 7 2 2 2 4 4 5 7l6 18c0 3 0 5-1 7-1 1-3 2-6 2l-173 0c-3 0-5-1-8-2-2-2-4-4-4-7z m-24-73c-1-3-1-5 0-7 2-2 3-2 6-2l174 0c2 0 5 0 7 2 3 2 4 4 5 7l6 18c1 2 0 5-1 6-1 2-3 3-5 3l-174 0c-3 0-5-1-7-3-3-1-4-4-5-6z"},"click":"function(gd) { \n        // is this being viewed in RStudio?\n        if (location.search == '?viewer_pane=1') {\n          alert('To learn about plotly for collaboration, visit:\\n https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html');\n        } else {\n          window.open('https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html', '_blank');\n        }\n      }"}],"cloud":false},"source":"A","attrs":{"393c36287c97":{"x":{},"y":{},"type":"scatter"},"393c78675786":{"x":{},"y":{}}},"cur_data":"393c36287c97","visdat":{"393c36287c97":["function (y) ","x"],"393c78675786":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"base_url":"https://plot.ly"},"evals":["config.modeBarButtonsToAdd.0.click"],"jsHooks":[]}</script>
+
+]
+
+---
+# `plotly` for nice interactive plots
+
+- Works for most `ggplot2` functions
+- You may try `ggvis` and `googlevis` packages too
+
+
+```r
+p = ggplot(data = mtcars, aes(x = disp, y = cyl)) + 
+      geom_point() + geom_smooth(method=lm) + ggtitle('cars')
+ggplotly(p)
+```
+
+<div id="htmlwidget-2bb49c4f2a90b2feb87e" style="width:60%;height:60%;" class="plotly html-widget"></div>
+<script type="application/json" data-for="htmlwidget-2bb49c4f2a90b2feb87e">{"x":{"data":[{"x":[160,160,108,258,360,225,360,146.7,140.8,167.6,167.6,275.8,275.8,275.8,472,460,440,78.7,75.7,71.1,120.1,318,304,350,400,79,120.3,95.1,351,145,301,121],"y":[6,6,4,6,8,6,8,4,4,6,6,8,8,8,8,8,8,4,4,4,4,8,8,8,8,4,4,4,8,6,8,4],"text":["disp: 160.0<br />cyl: 6","disp: 160.0<br />cyl: 6","disp: 108.0<br />cyl: 4","disp: 258.0<br />cyl: 6","disp: 360.0<br />cyl: 8","disp: 225.0<br />cyl: 6","disp: 360.0<br />cyl: 8","disp: 146.7<br />cyl: 4","disp: 140.8<br />cyl: 4","disp: 167.6<br />cyl: 6","disp: 167.6<br />cyl: 6","disp: 275.8<br />cyl: 8","disp: 275.8<br />cyl: 8","disp: 275.8<br />cyl: 8","disp: 472.0<br />cyl: 8","disp: 460.0<br />cyl: 8","disp: 440.0<br />cyl: 8","disp:  78.7<br />cyl: 4","disp:  75.7<br />cyl: 4","disp:  71.1<br />cyl: 4","disp: 120.1<br />cyl: 4","disp: 318.0<br />cyl: 8","disp: 304.0<br />cyl: 8","disp: 350.0<br />cyl: 8","disp: 400.0<br />cyl: 8","disp:  79.0<br />cyl: 4","disp: 120.3<br />cyl: 4","disp:  95.1<br />cyl: 4","disp: 351.0<br />cyl: 8","disp: 145.0<br />cyl: 6","disp: 301.0<br />cyl: 8","disp: 121.0<br />cyl: 4"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.66929133858268,"symbol":"circle","line":{"width":1.88976377952756,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[71.1,76.1746835443038,81.2493670886076,86.3240506329114,91.3987341772152,96.473417721519,101.548101265823,106.622784810127,111.69746835443,116.772151898734,121.846835443038,126.921518987342,131.996202531646,137.070886075949,142.145569620253,147.220253164557,152.294936708861,157.369620253165,162.444303797468,167.518987341772,172.593670886076,177.66835443038,182.743037974684,187.817721518987,192.892405063291,197.967088607595,203.041772151899,208.116455696203,213.191139240506,218.26582278481,223.340506329114,228.415189873418,233.489873417721,238.564556962025,243.639240506329,248.713924050633,253.788607594937,258.86329113924,263.937974683544,269.012658227848,274.087341772152,279.162025316456,284.236708860759,289.311392405063,294.386075949367,299.460759493671,304.535443037975,309.610126582278,314.684810126582,319.759493670886,324.83417721519,329.908860759494,334.983544303797,340.058227848101,345.132911392405,350.207594936709,355.282278481013,360.356962025316,365.43164556962,370.506329113924,375.581012658228,380.655696202532,385.730379746835,390.805063291139,395.879746835443,400.954430379747,406.029113924051,411.103797468354,416.178481012658,421.253164556962,426.327848101266,431.40253164557,436.477215189873,441.551898734177,446.626582278481,451.701265822785,456.775949367089,461.850632911392,466.925316455696,472],"y":[4.11272857060719,4.17868950754601,4.24465044448483,4.31061138142365,4.37657231836247,4.44253325530129,4.50849419224011,4.57445512917893,4.64041606611775,4.70637700305658,4.7723379399954,4.83829887693422,4.90425981387304,4.97022075081186,5.03618168775068,5.1021426246895,5.16810356162832,5.23406449856714,5.30002543550596,5.36598637244479,5.43194730938361,5.49790824632243,5.56386918326125,5.62983012020007,5.69579105713889,5.76175199407771,5.82771293101653,5.89367386795535,5.95963480489417,6.025595741833,6.09155667877182,6.15751761571064,6.22347855264946,6.28943948958828,6.3554004265271,6.42136136346592,6.48732230040474,6.55328323734356,6.61924417428238,6.68520511122121,6.75116604816003,6.81712698509885,6.88308792203767,6.94904885897649,7.01500979591531,7.08097073285413,7.14693166979295,7.21289260673177,7.27885354367059,7.34481448060941,7.41077541754824,7.47673635448706,7.54269729142588,7.6086582283647,7.67461916530352,7.74058010224234,7.80654103918116,7.87250197611998,7.9384629130588,8.00442384999763,8.07038478693645,8.13634572387527,8.20230666081409,8.26826759775291,8.33422853469173,8.40018947163055,8.46615040856937,8.53211134550819,8.59807228244701,8.66403321938584,8.72999415632466,8.79595509326348,8.8619160302023,8.92787696714112,8.99383790407994,9.05979884101876,9.12575977795758,9.1917207148964,9.25768165183522,9.32364258877405],"text":["disp:  71.10000<br />cyl: 4.112729","disp:  76.17468<br />cyl: 4.178690","disp:  81.24937<br />cyl: 4.244650","disp:  86.32405<br />cyl: 4.310611","disp:  91.39873<br />cyl: 4.376572","disp:  96.47342<br />cyl: 4.442533","disp: 101.54810<br />cyl: 4.508494","disp: 106.62278<br />cyl: 4.574455","disp: 111.69747<br />cyl: 4.640416","disp: 116.77215<br />cyl: 4.706377","disp: 121.84684<br />cyl: 4.772338","disp: 126.92152<br />cyl: 4.838299","disp: 131.99620<br />cyl: 4.904260","disp: 137.07089<br />cyl: 4.970221","disp: 142.14557<br />cyl: 5.036182","disp: 147.22025<br />cyl: 5.102143","disp: 152.29494<br />cyl: 5.168104","disp: 157.36962<br />cyl: 5.234064","disp: 162.44430<br />cyl: 5.300025","disp: 167.51899<br />cyl: 5.365986","disp: 172.59367<br />cyl: 5.431947","disp: 177.66835<br />cyl: 5.497908","disp: 182.74304<br />cyl: 5.563869","disp: 187.81772<br />cyl: 5.629830","disp: 192.89241<br />cyl: 5.695791","disp: 197.96709<br />cyl: 5.761752","disp: 203.04177<br />cyl: 5.827713","disp: 208.11646<br />cyl: 5.893674","disp: 213.19114<br />cyl: 5.959635","disp: 218.26582<br />cyl: 6.025596","disp: 223.34051<br />cyl: 6.091557","disp: 228.41519<br />cyl: 6.157518","disp: 233.48987<br />cyl: 6.223479","disp: 238.56456<br />cyl: 6.289439","disp: 243.63924<br />cyl: 6.355400","disp: 248.71392<br />cyl: 6.421361","disp: 253.78861<br />cyl: 6.487322","disp: 258.86329<br />cyl: 6.553283","disp: 263.93797<br />cyl: 6.619244","disp: 269.01266<br />cyl: 6.685205","disp: 274.08734<br />cyl: 6.751166","disp: 279.16203<br />cyl: 6.817127","disp: 284.23671<br />cyl: 6.883088","disp: 289.31139<br />cyl: 6.949049","disp: 294.38608<br />cyl: 7.015010","disp: 299.46076<br />cyl: 7.080971","disp: 304.53544<br />cyl: 7.146932","disp: 309.61013<br />cyl: 7.212893","disp: 314.68481<br />cyl: 7.278854","disp: 319.75949<br />cyl: 7.344814","disp: 324.83418<br />cyl: 7.410775","disp: 329.90886<br />cyl: 7.476736","disp: 334.98354<br />cyl: 7.542697","disp: 340.05823<br />cyl: 7.608658","disp: 345.13291<br />cyl: 7.674619","disp: 350.20759<br />cyl: 7.740580","disp: 355.28228<br />cyl: 7.806541","disp: 360.35696<br />cyl: 7.872502","disp: 365.43165<br />cyl: 7.938463","disp: 370.50633<br />cyl: 8.004424","disp: 375.58101<br />cyl: 8.070385","disp: 380.65570<br />cyl: 8.136346","disp: 385.73038<br />cyl: 8.202307","disp: 390.80506<br />cyl: 8.268268","disp: 395.87975<br />cyl: 8.334229","disp: 400.95443<br />cyl: 8.400189","disp: 406.02911<br />cyl: 8.466150","disp: 411.10380<br />cyl: 8.532111","disp: 416.17848<br />cyl: 8.598072","disp: 421.25316<br />cyl: 8.664033","disp: 426.32785<br />cyl: 8.729994","disp: 431.40253<br />cyl: 8.795955","disp: 436.47722<br />cyl: 8.861916","disp: 441.55190<br />cyl: 8.927877","disp: 446.62658<br />cyl: 8.993838","disp: 451.70127<br />cyl: 9.059799","disp: 456.77595<br />cyl: 9.125760","disp: 461.85063<br />cyl: 9.191721","disp: 466.92532<br />cyl: 9.257682","disp: 472.00000<br />cyl: 9.323643"],"type":"scatter","mode":"lines","name":"fitted values","line":{"width":3.77952755905512,"color":"rgba(51,102,255,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[71.1,76.1746835443038,81.2493670886076,86.3240506329114,91.3987341772152,96.473417721519,101.548101265823,106.622784810127,111.69746835443,116.772151898734,121.846835443038,126.921518987342,131.996202531646,137.070886075949,142.145569620253,147.220253164557,152.294936708861,157.369620253165,162.444303797468,167.518987341772,172.593670886076,177.66835443038,182.743037974684,187.817721518987,192.892405063291,197.967088607595,203.041772151899,208.116455696203,213.191139240506,218.26582278481,223.340506329114,228.415189873418,233.489873417721,238.564556962025,243.639240506329,248.713924050633,253.788607594937,258.86329113924,263.937974683544,269.012658227848,274.087341772152,279.162025316456,284.236708860759,289.311392405063,294.386075949367,299.460759493671,304.535443037975,309.610126582278,314.684810126582,319.759493670886,324.83417721519,329.908860759494,334.983544303797,340.058227848101,345.132911392405,350.207594936709,355.282278481013,360.356962025316,365.43164556962,370.506329113924,375.581012658228,380.655696202532,385.730379746835,390.805063291139,395.879746835443,400.954430379747,406.029113924051,411.103797468354,416.178481012658,421.253164556962,426.327848101266,431.40253164557,436.477215189873,441.551898734177,446.626582278481,451.701265822785,456.775949367089,461.850632911392,466.925316455696,472,472,472,466.925316455696,461.850632911392,456.775949367089,451.701265822785,446.626582278481,441.551898734177,436.477215189873,431.40253164557,426.327848101266,421.253164556962,416.178481012658,411.103797468354,406.029113924051,400.954430379747,395.879746835443,390.805063291139,385.730379746835,380.655696202532,375.581012658228,370.506329113924,365.43164556962,360.356962025316,355.282278481013,350.207594936709,345.132911392405,340.058227848101,334.983544303797,329.908860759494,324.83417721519,319.759493670886,314.684810126582,309.610126582278,304.535443037975,299.460759493671,294.386075949367,289.311392405063,284.236708860759,279.162025316456,274.087341772152,269.012658227848,263.937974683544,258.86329113924,253.788607594937,248.713924050633,243.639240506329,238.564556962025,233.489873417721,228.415189873418,223.340506329114,218.26582278481,213.191139240506,208.116455696203,203.041772151899,197.967088607595,192.892405063291,187.817721518987,182.743037974684,177.66835443038,172.593670886076,167.518987341772,162.444303797468,157.369620253165,152.294936708861,147.220253164557,142.145569620253,137.070886075949,131.996202531646,126.921518987342,121.846835443038,116.772151898734,111.69746835443,106.622784810127,101.548101265823,96.473417721519,91.3987341772152,86.3240506329114,81.2493670886076,76.1746835443038,71.1,71.1],"y":[3.64678548330433,3.72204205091393,3.7971821304815,3.87219840514371,3.94708304393352,4.02182767027349,4.09642333056352,4.17086046350879,4.24512887100877,4.31921769163288,4.39311537793952,4.46680967915372,4.54028763099612,4.61353555474397,4.68653906788719,4.7592831089965,4.83175197961527,4.90392940608325,4.97579862415128,5.04734248899758,5.11854361275476,5.18938453085124,5.25984789732738,5.3299167077977,5.39957454692718,5.46880585525628,5.53759620808595,5.60593259711853,5.67380370388027,5.74120015287976,5.80811473221042,5.87454257004373,5.94048125722939,6.00593090893299,6.0708941616743,6.135376105942,6.1993841583555,6.26292788072391,6.32601875598802,6.38866993270895,6.45089595041152,6.51271245776199,6.57413593442348,6.63518342572044,6.69587229720908,6.75622001412798,6.81624394868579,6.87596121636549,6.93538854096656,6.99454214699453,7.05343767723135,7.11209013284374,7.17051383315841,7.22872239219979,7.28672870919259,7.34454497043359,7.40218266019438,7.45965257860065,7.51696486472103,7.57412902337495,7.63115395442449,7.68804798354496,7.74481889366988,7.80147395647965,7.85801996344914,7.9144632560915,7.97080975513572,8.0270649884562,8.08323411763781,8.13932196311059,8.19533302782829,8.25127151949493,8.30714137136616,8.3629462616688,8.41868963169327,8.47437470262123,8.53000449115533,8.58558182402039,8.64110935140553,8.69658955941596,8.69658955941596,9.95069561813213,9.87425395226492,9.79785960577241,9.72151506475984,9.64522297941629,9.56898617646661,9.49280767261344,9.41669068903844,9.34063866703202,9.26465528482102,9.18874447566109,9.11291044725622,9.03715770256019,8.96149106200303,8.8859156871696,8.81043710593432,8.73506123902616,8.6597944279583,8.58464346420558,8.5096156194484,8.4347186766203,8.35996096139657,8.28535137363932,8.21089941816794,8.13661523405109,8.06250962141445,7.98859406452961,7.91488074969334,7.84138257613037,7.76811315786512,7.6950868142243,7.62231854637463,7.54982399709806,7.47761939090011,7.40572145158028,7.33414729462154,7.26291429223254,7.19203990965185,7.1215415124357,7.05143614590853,6.98174028973346,6.91246959257675,6.84363859396322,6.77526044245398,6.70734662098984,6.6399066913799,6.57294807024356,6.50647584806953,6.44049266137754,6.37499862533322,6.30999133078623,6.24546590590807,6.18141513879218,6.11782965394712,6.05469813289914,5.9920075673506,5.92974353260244,5.86789046919512,5.80643196179362,5.74535100601245,5.68463025589199,5.62425224686065,5.56419959105104,5.50445514364138,5.4450021403825,5.38582430761417,5.32690594687975,5.26823199674995,5.20978807471472,5.15156050205128,5.09353631448027,5.03570326122674,4.97804979484908,4.9205650539167,4.8632388403291,4.80606159279142,4.74902435770359,4.69211875848816,4.63533696417808,4.57867165791005,3.64678548330433],"text":["disp:  71.10000<br />cyl: 4.112729","disp:  76.17468<br />cyl: 4.178690","disp:  81.24937<br />cyl: 4.244650","disp:  86.32405<br />cyl: 4.310611","disp:  91.39873<br />cyl: 4.376572","disp:  96.47342<br />cyl: 4.442533","disp: 101.54810<br />cyl: 4.508494","disp: 106.62278<br />cyl: 4.574455","disp: 111.69747<br />cyl: 4.640416","disp: 116.77215<br />cyl: 4.706377","disp: 121.84684<br />cyl: 4.772338","disp: 126.92152<br />cyl: 4.838299","disp: 131.99620<br />cyl: 4.904260","disp: 137.07089<br />cyl: 4.970221","disp: 142.14557<br />cyl: 5.036182","disp: 147.22025<br />cyl: 5.102143","disp: 152.29494<br />cyl: 5.168104","disp: 157.36962<br />cyl: 5.234064","disp: 162.44430<br />cyl: 5.300025","disp: 167.51899<br />cyl: 5.365986","disp: 172.59367<br />cyl: 5.431947","disp: 177.66835<br />cyl: 5.497908","disp: 182.74304<br />cyl: 5.563869","disp: 187.81772<br />cyl: 5.629830","disp: 192.89241<br />cyl: 5.695791","disp: 197.96709<br />cyl: 5.761752","disp: 203.04177<br />cyl: 5.827713","disp: 208.11646<br />cyl: 5.893674","disp: 213.19114<br />cyl: 5.959635","disp: 218.26582<br />cyl: 6.025596","disp: 223.34051<br />cyl: 6.091557","disp: 228.41519<br />cyl: 6.157518","disp: 233.48987<br />cyl: 6.223479","disp: 238.56456<br />cyl: 6.289439","disp: 243.63924<br />cyl: 6.355400","disp: 248.71392<br />cyl: 6.421361","disp: 253.78861<br />cyl: 6.487322","disp: 258.86329<br />cyl: 6.553283","disp: 263.93797<br />cyl: 6.619244","disp: 269.01266<br />cyl: 6.685205","disp: 274.08734<br />cyl: 6.751166","disp: 279.16203<br />cyl: 6.817127","disp: 284.23671<br />cyl: 6.883088","disp: 289.31139<br />cyl: 6.949049","disp: 294.38608<br />cyl: 7.015010","disp: 299.46076<br />cyl: 7.080971","disp: 304.53544<br />cyl: 7.146932","disp: 309.61013<br />cyl: 7.212893","disp: 314.68481<br />cyl: 7.278854","disp: 319.75949<br />cyl: 7.344814","disp: 324.83418<br />cyl: 7.410775","disp: 329.90886<br />cyl: 7.476736","disp: 334.98354<br />cyl: 7.542697","disp: 340.05823<br />cyl: 7.608658","disp: 345.13291<br />cyl: 7.674619","disp: 350.20759<br />cyl: 7.740580","disp: 355.28228<br />cyl: 7.806541","disp: 360.35696<br />cyl: 7.872502","disp: 365.43165<br />cyl: 7.938463","disp: 370.50633<br />cyl: 8.004424","disp: 375.58101<br />cyl: 8.070385","disp: 380.65570<br />cyl: 8.136346","disp: 385.73038<br />cyl: 8.202307","disp: 390.80506<br />cyl: 8.268268","disp: 395.87975<br />cyl: 8.334229","disp: 400.95443<br />cyl: 8.400189","disp: 406.02911<br />cyl: 8.466150","disp: 411.10380<br />cyl: 8.532111","disp: 416.17848<br />cyl: 8.598072","disp: 421.25316<br />cyl: 8.664033","disp: 426.32785<br />cyl: 8.729994","disp: 431.40253<br />cyl: 8.795955","disp: 436.47722<br />cyl: 8.861916","disp: 441.55190<br />cyl: 8.927877","disp: 446.62658<br />cyl: 8.993838","disp: 451.70127<br />cyl: 9.059799","disp: 456.77595<br />cyl: 9.125760","disp: 461.85063<br />cyl: 9.191721","disp: 466.92532<br />cyl: 9.257682","disp: 472.00000<br />cyl: 9.323643","disp: 472.00000<br />cyl: 9.323643","disp: 472.00000<br />cyl: 9.323643","disp: 466.92532<br />cyl: 9.257682","disp: 461.85063<br />cyl: 9.191721","disp: 456.77595<br />cyl: 9.125760","disp: 451.70127<br />cyl: 9.059799","disp: 446.62658<br />cyl: 8.993838","disp: 441.55190<br />cyl: 8.927877","disp: 436.47722<br />cyl: 8.861916","disp: 431.40253<br />cyl: 8.795955","disp: 426.32785<br />cyl: 8.729994","disp: 421.25316<br />cyl: 8.664033","disp: 416.17848<br />cyl: 8.598072","disp: 411.10380<br />cyl: 8.532111","disp: 406.02911<br />cyl: 8.466150","disp: 400.95443<br />cyl: 8.400189","disp: 395.87975<br />cyl: 8.334229","disp: 390.80506<br />cyl: 8.268268","disp: 385.73038<br />cyl: 8.202307","disp: 380.65570<br />cyl: 8.136346","disp: 375.58101<br />cyl: 8.070385","disp: 370.50633<br />cyl: 8.004424","disp: 365.43165<br />cyl: 7.938463","disp: 360.35696<br />cyl: 7.872502","disp: 355.28228<br />cyl: 7.806541","disp: 350.20759<br />cyl: 7.740580","disp: 345.13291<br />cyl: 7.674619","disp: 340.05823<br />cyl: 7.608658","disp: 334.98354<br />cyl: 7.542697","disp: 329.90886<br />cyl: 7.476736","disp: 324.83418<br />cyl: 7.410775","disp: 319.75949<br />cyl: 7.344814","disp: 314.68481<br />cyl: 7.278854","disp: 309.61013<br />cyl: 7.212893","disp: 304.53544<br />cyl: 7.146932","disp: 299.46076<br />cyl: 7.080971","disp: 294.38608<br />cyl: 7.015010","disp: 289.31139<br />cyl: 6.949049","disp: 284.23671<br />cyl: 6.883088","disp: 279.16203<br />cyl: 6.817127","disp: 274.08734<br />cyl: 6.751166","disp: 269.01266<br />cyl: 6.685205","disp: 263.93797<br />cyl: 6.619244","disp: 258.86329<br />cyl: 6.553283","disp: 253.78861<br />cyl: 6.487322","disp: 248.71392<br />cyl: 6.421361","disp: 243.63924<br />cyl: 6.355400","disp: 238.56456<br />cyl: 6.289439","disp: 233.48987<br />cyl: 6.223479","disp: 228.41519<br />cyl: 6.157518","disp: 223.34051<br />cyl: 6.091557","disp: 218.26582<br />cyl: 6.025596","disp: 213.19114<br />cyl: 5.959635","disp: 208.11646<br />cyl: 5.893674","disp: 203.04177<br />cyl: 5.827713","disp: 197.96709<br />cyl: 5.761752","disp: 192.89241<br />cyl: 5.695791","disp: 187.81772<br />cyl: 5.629830","disp: 182.74304<br />cyl: 5.563869","disp: 177.66835<br />cyl: 5.497908","disp: 172.59367<br />cyl: 5.431947","disp: 167.51899<br />cyl: 5.365986","disp: 162.44430<br />cyl: 5.300025","disp: 157.36962<br />cyl: 5.234064","disp: 152.29494<br />cyl: 5.168104","disp: 147.22025<br />cyl: 5.102143","disp: 142.14557<br />cyl: 5.036182","disp: 137.07089<br />cyl: 4.970221","disp: 131.99620<br />cyl: 4.904260","disp: 126.92152<br />cyl: 4.838299","disp: 121.84684<br />cyl: 4.772338","disp: 116.77215<br />cyl: 4.706377","disp: 111.69747<br />cyl: 4.640416","disp: 106.62278<br />cyl: 4.574455","disp: 101.54810<br />cyl: 4.508494","disp:  96.47342<br />cyl: 4.442533","disp:  91.39873<br />cyl: 4.376572","disp:  86.32405<br />cyl: 4.310611","disp:  81.24937<br />cyl: 4.244650","disp:  76.17468<br />cyl: 4.178690","disp:  71.10000<br />cyl: 4.112729","disp:  71.10000<br />cyl: 4.112729"],"type":"scatter","mode":"lines","line":{"width":3.77952755905512,"color":"transparent","dash":"solid"},"fill":"toself","fillcolor":"rgba(153,153,153,0.4)","hoveron":"points","hoverinfo":"x+y","showlegend":false,"xaxis":"x","yaxis":"y","frame":null}],"layout":{"margin":{"t":40.8401826484018,"r":7.30593607305936,"b":37.2602739726027,"l":37.2602739726027},"plot_bgcolor":"rgba(235,235,235,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"title":"cars","titlefont":{"color":"rgba(0,0,0,1)","family":"","size":17.5342465753425},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[51.055,492.045],"tickmode":"array","ticktext":["100","200","300","400"],"tickvals":[100,200,300,400],"categoryorder":"array","categoryarray":["100","200","300","400"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"y","title":"disp","titlefont":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[3.33158997656294,10.2658911248735],"tickmode":"array","ticktext":["4","6","8","10"],"tickvals":[4,6,8,10],"categoryorder":"array","categoryarray":["4","6","8","10"],"nticks":null,"ticks":"outside","tickcolor":"rgba(51,51,51,1)","ticklen":3.65296803652968,"tickwidth":0.66417600664176,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.689497716895},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(255,255,255,1)","gridwidth":0.66417600664176,"zeroline":false,"anchor":"x","title":"cyl","titlefont":{"color":"rgba(0,0,0,1)","family":"","size":14.6118721461187},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":1.88976377952756,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716895}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":[{"name":"Collaborate","icon":{"width":1000,"ascent":500,"descent":-50,"path":"M487 375c7-10 9-23 5-36l-79-259c-3-12-11-23-22-31-11-8-22-12-35-12l-263 0c-15 0-29 5-43 15-13 10-23 23-28 37-5 13-5 25-1 37 0 0 0 3 1 7 1 5 1 8 1 11 0 2 0 4-1 6 0 3-1 5-1 6 1 2 2 4 3 6 1 2 2 4 4 6 2 3 4 5 5 7 5 7 9 16 13 26 4 10 7 19 9 26 0 2 0 5 0 9-1 4-1 6 0 8 0 2 2 5 4 8 3 3 5 5 5 7 4 6 8 15 12 26 4 11 7 19 7 26 1 1 0 4 0 9-1 4-1 7 0 8 1 2 3 5 6 8 4 4 6 6 6 7 4 5 8 13 13 24 4 11 7 20 7 28 1 1 0 4 0 7-1 3-1 6-1 7 0 2 1 4 3 6 1 1 3 4 5 6 2 3 3 5 5 6 1 2 3 5 4 9 2 3 3 7 5 10 1 3 2 6 4 10 2 4 4 7 6 9 2 3 4 5 7 7 3 2 7 3 11 3 3 0 8 0 13-1l0-1c7 2 12 2 14 2l218 0c14 0 25-5 32-16 8-10 10-23 6-37l-79-259c-7-22-13-37-20-43-7-7-19-10-37-10l-248 0c-5 0-9-2-11-5-2-3-2-7 0-12 4-13 18-20 41-20l264 0c5 0 10 2 16 5 5 3 8 6 10 11l85 282c2 5 2 10 2 17 7-3 13-7 17-13z m-304 0c-1-3-1-5 0-7 1-1 3-2 6-2l174 0c2 0 4 1 7 2 2 2 4 4 5 7l6 18c0 3 0 5-1 7-1 1-3 2-6 2l-173 0c-3 0-5-1-8-2-2-2-4-4-4-7z m-24-73c-1-3-1-5 0-7 2-2 3-2 6-2l174 0c2 0 5 0 7 2 3 2 4 4 5 7l6 18c1 2 0 5-1 6-1 2-3 3-5 3l-174 0c-3 0-5-1-7-3-3-1-4-4-5-6z"},"click":"function(gd) { \n        // is this being viewed in RStudio?\n        if (location.search == '?viewer_pane=1') {\n          alert('To learn about plotly for collaboration, visit:\\n https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html');\n        } else {\n          window.open('https://cpsievert.github.io/plotly_book/plot-ly-for-collaboration.html', '_blank');\n        }\n      }"}],"cloud":false},"source":"A","attrs":{"393c65e4661a":{"x":{},"y":{},"type":"scatter"},"393c1fa05cc3":{"x":{},"y":{}}},"cur_data":"393c65e4661a","visdat":{"393c65e4661a":["function (y) ","x"],"393c1fa05cc3":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.2,"selected":{"opacity":1},"debounce":0},"base_url":"https://plot.ly"},"evals":["config.modeBarButtonsToAdd.0.click"],"jsHooks":[]}</script>
+
+---
+# How to design your `shiny` app?
+
+--
+Things to think about:
+
+- what is your audience? 
+
+- What data/ data product would you like them to interact with?
+--
+
+- what would you like them to change (i.e. inputs)?
+
+- what would you like to show them (i.e. outputs)?
+--
+
+- how to fit your analysis behind the scene (i.e. in server.R)
+
+--
+
+- how would you like the different elements appear (e.g. layout)?
+
+---
+
+layout: false
+class:  center, middle
+
+# **Useful resources**
+
+Links to ebooks/blogs/doc/repo pages to learn more.
+
+
+---
+class: middle
+# Lists of resources
+
+- [STAT545 ebook shiny tutorial](https://stat545.com/shiny-tutorial.html)
+
+- [RStudio shiny cheat sheet](https://shiny.rstudio.com/images/shiny-cheatsheet.pdf)
+
+- [slides by Dean Attali (recommended)](https://docs.google.com/presentation/d/1dXhqqsD7dPOOdcC5Y7RW--dEU7UfU52qlb0YD3kKeLw/edit#slide=id.p)
+
+- [R x Plotly ebook](https://plotly-r.com/introduction.html)
+
+- [blogs by Zev Ross](https://www.zevross.com/blog/)
+
+- RStudio GitHub: 100+ examples
+
+- Stack Overflow
+
+---
+exclude: true
+class: middle
+
+# Potentially we can do a follow-up session on:
+- reactivity / event handling
+
+- app appearance
+
+- debugging and profiling
+
+- leaflet
+
+- advanced topics
+
+- drop-in "clinic"
+
+---
+layout: false
+class:  center, middle
+
+# **Thanks!**
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
+
+---
+
+
+# This presentation is made using the R package **xaringan**
+
+- **Free** and Open Source (Slides are composed in R Markdown + css)--&gt; HTML document
+
+- Uses **remark.js** library
+
+- Portable and easily share (Web-based slide) and easily print to PDF from Chrome
+
+- [**Repoducibe**](Reproducibility) research result
+
+- Limited capability to embed shiny apps at the moment
+
+.shrink[
+.right[![Right-aligned image](http://phdcomics.com/comics/archive/phd031214s.gif)] ]
+
+---
+exclude: true
+
+&lt;!-- --- --&gt;
+
+&lt;!-- name: fat --&gt;
+&lt;!-- class: inverse, top, center, middle --&gt;
+&lt;!-- background-image: url("img/bake-599521_1920-1024x683.jpg") --&gt;
+&lt;!-- background-size: cover --&gt;
+
+&lt;!-- --- --&gt;
+&lt;!-- template: fat --&gt;
+
+&lt;!-- # FAT --&gt;
+
+&lt;!-- --- --&gt;
+&lt;!-- template: fat --&gt;
+
+&lt;!-- # FAT = CHUNKS --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightLines": true,
+"ratio": "4:3"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
