@@ -1,0 +1,386 @@
+---
+title: 'Repeated operations: for loops, apply and parallelisation'
+author: Fiona Seaton
+date: 2020-11-11
+
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = TRUE, error = TRUE)
+```
+
+
+So today we're talking about all the things you do in R to make lots of things happen at once and hopefully make life easier for yourself.
+
+
+# Functions
+First of all, let's discuss functions. The ability to declare and use your own functions in R can make your coding life so much easier.
+
+You specify a function using, amazingly enough, the function command. You declare what arguments you want the function to take within the brackets and then declare what you want the function to do within the curly brackets immediately afterwards.
+
+For example, say I have a set of data that represents proportional abundances of species at a site. I want to find out species diversity, and I can write a function to calculate Shannon-Wiener diversity using the site data.
+
+```{r function}
+site.data <- c(0.1,0.3,0.1,0.2,0.1,0.2)
+
+shan_div <- function(x){-sum(x*log(x))}
+
+shan_div(site.data)
+```
+
+Above we've used a function that only takes one argument x. We can specify functions that take as many commands as we'd like, e.g.:
+
+```{r function x y z}
+my_func <- function(x=1,y=2,z=3){
+  (x*y)^z
+}
+
+my_func(1,4,1)
+
+```
+Within the function command above I've specified that I want values for x, y and z. And I've also said that if one isn't given you can use the default values of x=1, y=2, and z=3. So if you call the function without any arguments given it will return (1*2)^3
+
+```{r}
+my_func()
+```
+Or you can just specify one of the three arguments
+```{r}
+my_func(z=2)
+```
+
+
+I can also write a function that will return multiple values, perhaps calculating multiple forms of diversity. Here we have to combine these multiple things into one object, and tell R what to give us back from the function using the return command.
+
+```{r div_ind}
+div_ind <- function(x){
+  
+  shan = -sum(x*log(x)) #specify the shannon index
+  simp = sum(x^2)       #specify the simpson index
+  
+  div_table = c(shan, simp) #combine into one object for returning
+  names(div_table) = c("Shannon", "Simpson") # make the object easy to understand
+  
+  return(div_table) #return the object, this will be printed to the screen or saved
+}
+
+div_ind(site.data)
+
+```
+
+# Doing actions repeatedly
+Much of (data) science is doing things over and over and over and over again but thankfully we can automate many of these tasks using fancy coding (or not so fancy). There's a couple of ways to do this that we'll cover: looping and the apply family. We're starting with the apply family because they are often quicker and easier to interpret but many people stick to for loops (myself included) because they started with them and learning a whole new way of doing things is just a *hassle*.
+
+## The apply family of functions
+
+The apply family of functions are used to do multiple functions repeatedly over a list, vector or array. There's a few members of this family, here we'll mainly discuss apply, lapply and sapply. I'm starting with the replicate function as we'll use it to make the data we analyse using apply.
+
+### replicate
+First of all, replicate can be used to repeatedly do one thing. It's really useful for random number generation. R has a few functions for random number generation, here I'm using runif which will randomly generate numbers between two bounds. We also specify a seed using set.seed which will mean that everyone gets the same output from this process (see ?RNG for more details). The output is simplified into an array automatically, which can be overridden if necessary. As we want to have sites on the rows and species on the columns the output from replicate is transposed using the t function.
+
+
+```{r replicate}
+set.seed(687)
+
+sites <- t(replicate(10, runif(20, 0, 1)))
+
+sites <- sites/rowSums(sites) #correcting data to be proportional
+
+head(sites)
+
+```
+
+We now have a matrix with each row being a site and each column a species. We want to find out the diversity of each site, which we can do by applying the div_ind function to each row. 
+
+## apply
+The apply function takes a matrix or array and applies a function to whichever specified "margins". If you want the function to be applied over the rows then you set MARGIN = 1, for columns set MARGIN = 2, for both set MARGIN = c(1,2). The same principle holds for arrays which are more than two dimensions, e.g. if you want the function to be applied to the first three margins then you'd set MARGIN = c(1,2,3). On a side note, anyone have any idea if there's a word for the equivalent to rows and columns in 3D? I think I saw someone use shelves for that once but I haven't seen that anywhere else.
+
+```{r apply}
+apply(sites, 1, div_ind) #here we take the sites data, say we want the function to be applied to the rows, and specify which function
+
+```
+
+Also, an example of applying the function to both margins so that every element is rounded:
+```{r}
+apply(sites, 1:2, round, 3)
+```
+
+
+### Applying a function to a list
+The apply function is great for when you need to use a function on a matrix or dataframe, but often you need to run a function over a list of objects. Many R objects are structured in the form of lists so this is generally a very useful thing to be able to do. Dataframes are themselves a form of list - each column within a dataframe is a list element.
+
+Following the theme of descriptive function names, lapply is used to apply a function to a list. There is also the function sapply which is often more user-friendly as it returns a nicer output than lapply by combining a list into an array (in R a 1D array is a vector and a 2D array is a matrix).
+
+```{r lapply and sapply}
+lapply(1:5, function(x) sqrt(x^3))
+sapply(1:5, function(x) sqrt(x^3))
+```
+
+These functions can be used to do a wide array of different things, for example here is something I do ALL the time where I need to get the number before a character for every element in a string. I use strsplit to split the string at a character (here X), and then apply the subsetting function [ to the output of strsplit:
+
+```{r}
+test_string <- paste0(sample(100:9999,10),
+                      "X",
+                      sample(1:9,size = 10, replace = TRUE))
+test_string
+sapply(strsplit(test_string, "X"), "[", 1)
+```
+
+Another example:
+```{r}
+df <- mtcars
+sapply(df, FUN = function(x) min(x[x != 0]))
+```
+
+There is also the vapply functions, which is like sapply except that you also specify what form of output you are expecting:
+
+```{r}
+vapply(df, min, numeric(1))
+```
+
+This will then error if the result is unexpected:
+
+```{r}
+vapply(df, function(x) rbind(min(x),max(x)), numeric(1))
+```
+
+The mapply function allows you to supply multiple arguments to the function, the first argument is the function and then you supply the arguments to the function in the order they would appear (or named).
+
+```{r}
+mapply(rep, 1:9, 9:1)
+```
+
+```{r}
+mapply(sample, size = 1:9, x = 9:1, replace = TRUE)
+```
+
+For reading and writing files it is often more useful to operate over the names of a list rather than the list components themselves:
+
+```{r}
+test_list <- replicate(10, data.frame(x = rnorm(100), y = rnorm(100)), 
+                       simplify = FALSE)
+names(test_list) <- LETTERS[1:10]
+str(test_list)
+
+lapply(names(test_list), function(i){
+  write.csv(test_list[[i]], paste0("test_",i,".csv"))
+})
+```
+
+You can also operate over a list of numbers which makes lapply behave similarly to a for loop (this can be useful if you're trying to index multiple things):
+
+```{r}
+test_names <- stringi::stri_rand_strings(10,5,"[A-Z]")
+id_num <- rnorm(10)
+
+lapply(1:10, function(i){
+  
+  df <- subset(test[[i]], x < id_num[i])
+  
+  write.csv(df, paste0("test_",test_names[i],".csv"))
+  
+  return(paste(test_names[i], "filtered by", id_num[i]))
+})
+
+```
+
+Note however that as you are running the code within a function this will not alter the objects in the environment in general. Outputs have to be explicitly returned in most cases:
+
+```{r}
+output <- matrix(nrow=10,ncol=5)
+
+lapply(1:10, function(x){
+  output[x,] <- rnorm(5)
+})
+# output is printed to the console
+
+output
+# no change to original object
+
+```
+
+The sapply function will bind together your outputs and this may not be what you were expecting, so it is worth checking.
+```{r}
+output2 <- sapply(1:10, function(x){
+  matrix(c(rnorm(4),runif(4,10,20)),
+         nrow=2,ncol=4, byrow = TRUE)
+})
+output2
+```
+
+Here the matrix structure is lost and every repeat is turned into a vector. If you want to preserve the matrix structure and append them together you may be better using lapply and binding the output: 
+
+
+```{r}
+output2 <- lapply(1:10, function(x){
+  matrix(c(rnorm(4),runif(4,10,20)),
+         nrow=2,ncol=4, byrow = TRUE)
+})
+do.call(rbind, output2)
+```
+
+
+## for loops
+Often you come across for loops rather than uses of the apply family. These go through a sequence and do something for every member of a sequence. You have to create an object for your outputs before entering the for loop. 
+
+```{r for loop}
+output <- matrix(nrow = 100, ncol = 50)
+for(i in 1:nrow(output)){
+  output[i,] <- rnorm(ncol(output))
+}
+
+```
+
+You can define the sequence for i in multiple ways, it is common to use something like 1:10 to create the sequence. However if you are inputting a second number that depends on some value elsewhere, as above where I used nrow(output) this can sometimes return sequences that aren't what you'd expect if there is something unusual about the other value:
+
+```{r}
+n <- 10
+1:n
+
+n <- 0
+1:n
+
+```
+
+To add a check into your code to make sure the sequence generated is as you'd expect you can use seq instead, specifying that you expect the sequence to increase by one each time:
+
+```{r}
+
+seq(1,n,1)
+
+```
+
+This will throw an error, so your code will stop and tell you something has gone wrong (sad to see but worse to only realise when writing up).
+
+For loops are a lot quicker when you do not add new rows/columns in each iteration but instead start with an object of the appropriate size:
+
+```{r for loop time }
+
+
+system.time({
+  output1 <- vector(length = 100000)
+  for(i in seq(1,100000,1)){
+    output1[i] <- mean(runif(500, 0, 100))
+  }
+})
+
+system.time({
+  output2 <- vector()
+  for(i in seq(1,100000,1)){
+    output2[i] <- mean(runif(500, 0, 100))
+  }
+})
+
+```
+
+
+The apply family of functions is usually faster than a for loop, but in many cases the difference is so small that you may just prefer to go with what you're comfortable with.
+
+```{r for loop time}
+system.time({
+  output <- matrix(nrow = 100000, ncol = 50)
+  for(i in seq(1,nrow(output))){
+    output[i,] <- rnorm(ncol(output))
+  }})
+```
+```{r replicate time}
+system.time({
+  output <- replicate(100000, rnorm(50))
+}
+)
+```
+
+One case where for loops can be really slow is when you nest them, this can quickly get out of hand and you'd be better trying to either use vectorised alternatives or functions.
+
+# Debugging 
+
+Debugging is a massive topic so I'm just going to include the kind of things I check with dealing with functions and for loops. In both cases I tend to try and work through one example and see where it breaks or returns something unexpected.
+
+## for loops
+First, read the error message. If you can understand what went wrong from that, great! However, if it is completely unpenetrable (as often seems to happen) then check what value your index is at - i is stored in the environment and if it is 1 then you know it failed on the first try but if it is higher than 1 then something about the value of your data at that index caused an issue.
+
+Toy example:
+
+```{r}
+output <- matrix(nrow = 70, ncol = 20)
+
+for (i in seq(1,70,1)){
+  output[,i] <- rnorm(70)
+}
+```
+
+Here I have messed up my indexing and am trying to assign values to column 21 which doesn't exist - note that i in the environment is at 21 which is where the issue occurred.
+
+If you can't tell from looking at i and the code what went wrong then you can work through the code line by line and see when something goes wrong. Good things to check include:
+
+* Are my outputs of the expected dimensions?
+* Are my outputs of the expected type or class?
+* Am I indexing correctly?
+* Am I using the function from the expected package?
+
+## Functions
+Functions can be debugged in the same way as for loops - you can work through the code line by line within the function to see where the error occurs. You can also ask the function to print its progress so you can see where it breaks.
+
+```{r}
+test_data <- as.data.frame(replicate(5,rnorm(20)))
+sapply(1:70, function(x){
+  print(x)
+  
+  return(sample(test_data[,x],10))
+  
+})
+
+```
+
+This errors out at the 6th try as there is no 6th column. RStudio also has handy tools for tracing back errors, if you run this command in RStudio it will show a Show Traceback button with an error. I highly recommend clicking on it as it will show the commands that led to the error from most recent to first. For more hints and tips on debugging in R and RStudio see the Debugging section of Hadley Wickham's [book on Advanced R][https://adv-r.hadley.nz/debugging.html] and some of the RStudio documentation [e.g. this how to article][https://support.rstudio.com/hc/en-us/articles/200713843-Debugging-with-RStudio].
+
+
+# Parallelising code
+The apply family of functions are good examples of [embarrassingly parallel programming](https://en.wikipedia.org/wiki/Embarrassingly_parallel) which means that they can run as a set of parallel tasks really easily. There are a few different packages to parallelise code in R, the most famous is probably parallel which is bundled with base R. However, parallel's functions are operating system specific so code you write using parallel on Windows will not work on Mac or Linux. This may or may not be an issue for you depending on how you use R.
+Two packages that are also commonly used for parallelising code that don't have this issue are foreach and future. These are both set up so that the code remains the same but that the user can choose how to run their code. I'm going to show a quick demonstration of how future can be used to run parallel processes using the future.apply package. 
+
+The future.apply package provides the user with an interface to run apply, lapply etc in a parallel way (this can also be done using foreach and parallel, I'm showing future.apply as an example).
+
+```{r}
+library(future.apply)
+```
+
+```{r}
+plan(sequential)
+
+sites <- t(future_replicate(10000, runif(10, 0, 100), future.seed = 687))
+
+sites[1:5,1:5]
+```
+```{r}
+plan(multisession)
+
+sites <- t(future_replicate(10000, runif(10, 0, 100), future.seed = 687))
+
+sites[1:5,1:5]
+```
+
+To calculate the diversity for each site in a parallel way you can do this:
+
+```{r}
+sites <- sites/rowSums(sites)
+
+sites_div <- future_apply(sites, 1, div_ind)
+
+summary(t(sites_div))
+```
+
+A few comments about the future package, it will error out if you try and pass more than 500MB of data to the different processes but you can override this by changing the global future.globals.maxSize option to 1e9 for a billion bytes (~ a GB). However, moving large amounts of data around can lead to slower code so consider what you actually need to give to and get back from the workers. 
+
+There are equivalent functions to lapply, sapply, map etc as well in future.apply, as well as the furrr package which takes the purrr family of mapping functions and gives them a futures backend.
+
+```{r}
+detach("package:future.apply", unload = TRUE)
+detach("package:future", unload = TRUE)
+```
+
+The foreach package could also be used, writing foreach code looks like writing a for loop however in practice it behaves more like lapply. The foreach package can run with various parallel backends, so it can use that of parallel or futures or one of the various other parallelisation focused R packages. Note that dealing with random number generation and seeds is more difficult in foreach than future, you have to use a backend that explicitly deals with random number generation to make it work in parallel.
+
+
+Some types of R objects cannot be exported to a parallel framework, such as database connections, as they are specific to the R session they are created in. Some of these can be worked around by having the function open its own connection each time it is executed (e.g. in opening a netcdf file using ncdf4) but others cannot be. See the future vignette for more discussion and for how to make sure your code errors out in these instances.
